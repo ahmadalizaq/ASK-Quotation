@@ -5,27 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>ASK & Quotation</title>
 
-<!-- الخطوط -->
+<!-- الخطوط الرسمية -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
 
-<!-- ملف التنسيقات الرئيسي -->
+<!-- التنسيق الرئيسي -->
 <link rel="stylesheet" href="style.css">
 
-<!-- مكتبة Supabase CDN الرسمية -->
+<!-- مكتبة Supabase JS CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<!-- شاشة التنبيه لإعداد Supabase عند البداية -->
+<!-- شاشة التنبيه للتهيجة -->
 <div id="setupNotice" style="display:none;">
   <div class="box">
-    <h2>الموقع يحتاج إعداد أول مرة</h2>
-    <p style="font-size:13px; line-height:1.8;">لازم تربط قاعدة بيانات Supabase قبل ما يشتغل الموقع فعلياً (حسابات، أسئلة، اقتباسات، اعترافات — كلها حقيقية ومحتاجة قاعدة بيانات). افتح ملف <code>SETUP.md</code> المرفق واتبع الخطوات، بعدين رجّع افتح الصفحة.</p>
+    <h2>الموقع يحتاج إلى إعداد أول مرة</h2>
+    <p style="font-size:13px; line-height:1.8;">يرجى ربط Supabase وضبط المتغيرات داخل ملف <code>config.js</code> للبدء.</p>
   </div>
 </div>
 
-<!-- شاشة تسجيل الدخول وإنشاء الحساب -->
+<!-- شاشة تسجيل الدخول -->
 <div id="authScreen" style="display:none;">
   <div class="auth-card">
     <div class="auth-logo">
@@ -37,7 +37,7 @@
     <div class="auth-error" id="authError"></div>
     <div class="auth-field" id="nameField" style="display:none;">
       <label>اسمك</label>
-      <input type="text" id="authName" placeholder="مثال: سارة العتيبي">
+      <input type="text" id="authName" placeholder="مثال: سارة">
     </div>
     <div class="auth-field">
       <label>البريد الإلكتروني</label>
@@ -54,9 +54,8 @@
   </div>
 </div>
 
-<!-- ===================== MOBILE APP ===================== -->
+<!-- ===================== واجهة الموبايل ===================== -->
 <div class="app-mobile" id="appMobile">
-
   <div class="topbar">
     <div class="logo">
       <div class="logo-mark">A؟</div>
@@ -80,7 +79,7 @@
   </div>
 </div>
 
-<!-- ===================== DESKTOP APP ===================== -->
+<!-- ===================== واجهة سطح المكتب (DESKTOP) ===================== -->
 <div class="app-desktop" id="appDesktop">
   <div class="d-header">
     <div class="logo">
@@ -88,7 +87,7 @@
       <div class="logo-text">ASK <span>&Q</span></div>
     </div>
     <div class="d-search">
-      <input type="text" id="dHeaderSearch" placeholder="ابحث عن اقتباس... واضغط Enter" onkeydown="if(event.key==='Enter') headerSearch(this.value)">
+      <input type="text" id="dHeaderSearch" placeholder="ابحث عن اقتباس..." onkeydown="if(event.key==='Enter') headerSearch(this.value)">
     </div>
     <div class="d-header-actions">
       <div class="d-coin-chip">🪙 <span id="dCoinCount">0</span></div>
@@ -115,13 +114,11 @@
   </div>
 </div>
 
-<!-- لوحة الإشعارات -->
+<!-- الإشعارات والبطاقات المنبثقة -->
 <div class="notif-panel" id="notifPanel"></div>
-
-<!-- خلفية التعتيم -->
 <div class="overlay" id="overlay" onclick="closeSheet()"></div>
 
-<!-- composer sheet (نافذة إنشـاء جديد) -->
+<!-- Composer Sheet -->
 <div class="sheet" id="composerSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title">إنشاء جديد</div>
@@ -133,33 +130,32 @@
   </div>
 
   <div id="composerAskBody">
-    <textarea id="askText" rows="3" placeholder="اكتب سؤالك هنا... بينشر للجميع، وأي شخص يقدر يجاوب عليه"></textarea>
+    <textarea id="askText" rows="3" placeholder="اكتب سؤالك هنا..."></textarea>
     <div class="toggle-row">
-      <span>سؤال مجهول (ما يظهر اسمك)</span>
+      <span>سؤال مجهول</span>
       <div class="toggle on" id="anonToggle" onclick="this.classList.toggle('on')"><div class="toggle-dot"></div></div>
     </div>
     <button class="btn-primary" onclick="submitAsk()">إرسال السؤال</button>
   </div>
 
   <div id="composerShoutBody" style="display:none;">
-    <textarea id="shoutText" rows="3" placeholder="اكتب سؤال الشوت أوت..."></textarea>
-    <div class="toggle-row"><span>يكلف</span><b style="font-size:12px;color:var(--red)">15 🪙</b></div>
+    <textarea id="shoutText" rows="3" placeholder="اكتب نص الشوت أوت..."></textarea>
+    <div class="toggle-row"><span>التكلفة</span><b style="font-size:12px;color:var(--red)">15 🪙</b></div>
     <button class="btn-primary" onclick="submitShoutout()">نشر الشوت أوت</button>
   </div>
 
   <div id="composerQuoteBody" style="display:none;">
-    <textarea id="quoteText" rows="3" placeholder="اكتب اقتباساً أو حكمة لمشاركتها..."></textarea>
+    <textarea id="quoteText" rows="3" placeholder="اكتب الاقتباس..."></textarea>
     <button class="btn-primary" onclick="submitQuote()">نشر الاقتباس</button>
   </div>
 
   <div id="composerConfessionBody" style="display:none;">
-    <textarea id="confessionText" rows="4" placeholder="اكتب اعترافك هنا... ما راح يظهر اسمك أبداً"></textarea>
-    <div class="muted" style="font-size:10.5px; margin:2px 2px 4px 2px;">🎭 ينشر بشكل مجهول بالكامل — بدون اسمك أو صورتك</div>
+    <textarea id="confessionText" rows="4" placeholder="اكتب اعترافك..."></textarea>
     <button class="btn-primary" onclick="submitConfession()">نشر الاعتراف</button>
   </div>
 </div>
 
-<!-- answer sheet (نافذة الإجابة) -->
+<!-- Answer Sheet -->
 <div class="sheet" id="answerSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title">الإجابة على السؤال</div>
@@ -168,13 +164,12 @@
   <button class="btn-primary" onclick="submitAnswer()">نشر الإجابة</button>
 </div>
 
-<!-- التنبيه السريع Toast -->
+<!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- ملفات السكربت مرتبة بشكل صحيح جداً -->
+<!-- السكربتات المربوطة -->
 <script src="config.js"></script>
 <script src="supabase-client.js"></script>
-<script src="db.js"></script>
 <script src="app.js"></script>
 
 </body>
