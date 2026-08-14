@@ -2,36 +2,22 @@
 const SUPABASE_URL = 'https://exoqrqndxzqibxwmsebv.supabase.co'; 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4b3FycW5keHpxaWJ4d21zZWJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3MDg2NTMsImV4cCI6MjEwMjI4NDY1M30.uBMp6_k8IHCN-gscpKcPsMqlwf03g-b4C2wGbJHCWpg';
 
-// التحقق من صلاحية الاتصال
 let sb = null;
+
+// تهيئة الاتصال بقاعدة البيانات
 try {
-  if (typeof supabase !== 'undefined' && SUPABASE_URL.indexOf('YOUR-PROJECT') === -1) {
+  if (typeof supabase !== 'undefined' && !SUPABASE_URL.includes('YOUR-PROJECT')) {
     sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
 } catch (e) {
-  console.warn("Supabase not initialized, running in fallback/demo mode.");
+  console.error("فشل الاتصال بـ Supabase:", e);
 }
 
-// ================= الحالة العامة (State) =================
-let isDemoMode = false;
+// ================= الحالة العامة =================
 let currentUser = null;
 let currentTab = 'questions';
 let publicPosts = [];
 let confessions = [];
-let notifications = [];
-let myLikedPostIds = new Set();
-let myLikedConfessionIds = new Set();
-
-// ================= بيانات تجريبية (Demo Data) =================
-const demoPosts = [
-  { id: '1', type: 'qa', q: 'ما هي أفضل نصيحة قرأتها هذا العام؟', a: 'أن الاستمرارية تتغلب دائماً على الشغف المؤقت.', asked_by: 'u2', asker_name: 'أحمد', asker_initials: 'أ', likes: 12, created_at: new Date().toISOString() },
-  { id: '2', type: 'qa', q: 'هل تعتقد أن الذكاء الاصطناعي سيغير شكل العمل المستقبلي؟', a: null, asked_by: 'u3', asker_name: 'سارة', asker_initials: 'س', likes: 5, created_at: new Date().toISOString() },
-  { id: '3', type: 'quote', text: '«العقل كالظل، ينقبض إذا اقتربت من الضوء ويتسع إذا ابتعدت.»', author_name: 'حكمة اليوم', author_initials: 'ح', likes: 24, created_at: new Date().toISOString() }
-];
-
-const demoConfessions = [
-  { id: 'c1', text: 'أحياناً أتظاهر بالانشغال فقط لأقضي بعض الوقت بمفردي بعيداً عن صخب الحياة.', likes: 8, created_at: new Date().toISOString() }
-];
 
 // ================= أدوات مساعدة =================
 function toast(msg) {
@@ -39,7 +25,7 @@ function toast(msg) {
   if (!t) return;
   t.innerHTML = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 function timeAgo(iso) {
@@ -51,17 +37,37 @@ function timeAgo(iso) {
   return `قبل ${Math.floor(diff / 86400)} يوم`;
 }
 
-// ================= التنقل والشاشات =================
-function enableDemoMode() {
-  isDemoMode = true;
-  currentUser = { id: 'demo_user', name: 'زائر تجريبي', initials: 'ز', coins: 50, vip: false };
-  publicPosts = [...demoPosts];
-  confessions = [...demoConfessions];
-  showMainApp();
-  render();
-  toast('مرحباً بك في الوضع التجريبي 🚀');
+// ================= جلب البيانات من Supabase =================
+async function loadDataFromSupabase() {
+  if (!sb) return;
+
+  try {
+    // جلب الأسئلة والاقتباسات
+    const { data: postsData, error: postsErr } = await sb
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (postsErr) throw postsErr;
+    if (postsData) publicPosts = postsData;
+
+    // جلب الاعترافات
+    const { data: confData, error: confErr } = await sb
+      .from('confessions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (confErr) throw confErr;
+    if (confData) confessions = confData;
+
+    render();
+  } catch (err) {
+    console.error("خطأ أثناء جلب البيانات:", err);
+    toast("⚠️ خطأ في جلب البيانات من قاعدة البيانات: " + (err.message || 'راجع الـ Console'));
+  }
 }
 
+// ================= التنقل والشاشات =================
 function showAuthScreen() {
   document.getElementById('authScreen').style.display = 'flex';
   document.getElementById('appMobile').style.display = 'none';
@@ -91,29 +97,61 @@ function toggleAuthMode() {
 
 async function submitAuth() {
   if (!sb) {
-    toast('يرجى إضافة بيانات Supabase أو استخدام وضع الزائر');
+    toast('⚠️ لم يتم ربط بيانات Supabase في ملف app.js بعد');
     return;
   }
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   const name = document.getElementById('authName').value.trim();
 
-  if (!email || !password) { toast('يرجى ملء جميع الحقول Required'); return; }
+  if (!email || !password) { toast('يرجى كتابة البريد وكلمة المرور'); return; }
 
   try {
     if (authMode === 'signup') {
       const { data, error } = await sb.auth.signUp({ email, password });
       if (error) throw error;
       if (data.user) {
-        await sb.from('profiles').insert([{ id: data.user.id, name, initials: name[0] || 'A', coins: 50 }]);
+        await sb.from('profiles').insert([{ id: data.user.id, name: name || 'عضو جديد', initials: (name[0] || 'A').toUpperCase(), coins: 50 }]);
       }
-      toast('تم إنشاء الحساب بنجاح!');
+      toast('تم إنشاء الحساب بنجاح! يمكنك الدخول الآن');
     } else {
-      const { error } = await sb.auth.signInWithPassword({ email, password });
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      await initUserSession(data.user);
     }
   } catch (err) {
-    toast(err.message || 'حدث خطأ في التسجيل');
+    toast('❌ ' + (err.message || 'فشل تسجيل الدخول'));
+  }
+}
+
+function enableDemoMode() {
+  currentUser = { id: 'demo_user', name: 'زائر تجريبي', initials: 'ز', coins: 50 };
+  publicPosts = [
+    { id: '1', type: 'qa', q: 'ما هو اقتباسك المفضل؟', a: 'العلم نور والجهل تاركٌ صاحبه في الظلمات.', asker_name: 'أحمد', asker_initials: 'أ', created_at: new Date().toISOString() }
+  ];
+  confessions = [
+    { id: 'c1', text: 'هذا منشور تجريبي للتأكد من شاشة العرض.', created_at: new Date().toISOString() }
+  ];
+  showMainApp();
+  render();
+  toast('🚀 دخلت بوضع المعاينة التجريبية');
+}
+
+async function initUserSession(authUser) {
+  try {
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', authUser.id).single();
+    currentUser = {
+      id: authUser.id,
+      name: profile?.name || authUser.email.split('@')[0],
+      initials: profile?.initials || 'U',
+      coins: profile?.coins || 0
+    };
+    showMainApp();
+    await loadDataFromSupabase();
+  } catch (e) {
+    currentUser = { id: authUser.id, name: 'عضو', initials: 'ع', coins: 10 };
+    showMainApp();
+    await loadDataFromSupabase();
   }
 }
 
@@ -128,10 +166,11 @@ function render() {
   else if (currentTab === 'profile') html = renderProfile();
 
   document.getElementById('content').innerHTML = html;
-  document.getElementById('desktopContent').innerHTML = html;
+  const dtContent = document.getElementById('desktopContent');
+  if (dtContent) dtContent.innerHTML = html;
   
-  document.getElementById('dCoinCount').textContent = currentUser.coins;
-  document.getElementById('dCoinWidget').textContent = currentUser.coins + ' 🪙';
+  const coinEl = document.getElementById('dCoinCount');
+  if (coinEl) coinEl.textContent = currentUser.coins;
 }
 
 function renderQuestions() {
@@ -150,7 +189,7 @@ function renderQuestions() {
               </div>
             </div>
             <div class="q-bubble">${it.q}</div>
-            ${it.a ? `<div class="a-text">${it.a}</div>` : `<button class="btn-primary" style="padding:8px 12px; font-size:12px;" onclick="openAnswer('${it.id}')">إجابة</button>`}
+            ${it.a ? `<div class="a-text">${it.a}</div>` : `<button class="btn-primary" style="padding:8px 12px; font-size:12px; width:auto;" onclick="openAnswer('${it.id}')">إجابة</button>`}
           </div>
         `).join('')}
     </div>
@@ -165,8 +204,8 @@ function renderQuotes() {
       ${quotes.length === 0 ? `<div class="empty-state">لا توجد اقتباسات بعد</div>` :
         quotes.map(q => `
           <div class="card">
-            <div style="font-family:'El Messiri',sans-serif; font-size:16px; line-height:1.6;">${q.text}</div>
-            <div style="text-align:left; font-size:12px; color:var(--muted); margin-top:8px;">— ${q.author_name || 'مجهول'}</div>
+            <div style="font-family:'El Messiri',sans-serif; font-size:16px; line-height:1.6;">${q.text || q.q}</div>
+            <div style="text-align:left; font-size:12px; color:var(--muted); margin-top:8px;">— ${q.author_name || q.asker_name || 'مجهول'}</div>
           </div>
         `).join('')}
     </div>
@@ -179,7 +218,7 @@ function renderConfessions() {
     <div style="margin-top:14px;">
       ${confessions.length === 0 ? `<div class="empty-state">لا توجد اعترافات بعد</div>` :
         confessions.map(c => `
-          <div class="confession-card">
+          <div class="card">
             <div class="card-head">
               <div class="avatar anon">🎭</div>
               <div class="name-line"><b>اعتراف مجهول</b><small>${timeAgo(c.created_at)}</small></div>
@@ -197,111 +236,64 @@ function renderProfile() {
       <div class="avatar" style="width:60px; height:60px; margin:0 auto 10px; font-size:22px;">${currentUser.initials}</div>
       <h3>${currentUser.name}</h3>
       <p style="color:var(--muted); font-size:13px; margin-top:4px;">الرصيد: ${currentUser.coins} 🪙</p>
-      <button class="btn-primary" style="margin-top:16px;" onclick="location.reload()">تسجيل الخروج</button>
+      <button class="btn-primary" style="margin-top:16px;" onclick="logout()">تسجيل الخروج</button>
     </div>
   `;
 }
 
-// ================= النوافذ والمشاركة =================
+async function logout() {
+  if (sb) await sb.auth.signOut();
+  currentUser = null;
+  showAuthScreen();
+}
+
+// ================= النوافذ والإرسال =================
 function openComposer() {
   document.getElementById('overlay').classList.add('show');
   document.getElementById('composerSheet').classList.add('show');
 }
+
 function closeSheet() {
   document.getElementById('overlay').classList.remove('show');
   document.getElementById('composerSheet').classList.remove('show');
   document.getElementById('answerSheet').classList.remove('show');
 }
 
-function setComposerMode(mode) {
-  document.querySelectorAll('#composerTabs .mode-opt').forEach(d => d.classList.toggle('active', d.dataset.mode === mode));
-  document.getElementById('composerAskBody').style.display = mode === 'ask' ? 'block' : 'none';
-  document.getElementById('composerShoutBody').style.display = mode === 'shoutout' ? 'block' : 'none';
-  document.getElementById('composerQuoteBody').style.display = mode === 'quote' ? 'block' : 'none';
-  document.getElementById('composerConfessionBody').style.display = mode === 'confession' ? 'block' : 'none';
-}
-
-let activeQuestionId = null;
-function openAnswer(id) {
-  activeQuestionId = id;
-  const q = publicPosts.find(p => p.id === id);
-  if (!q) return;
-  document.getElementById('answerQuestionPreview').textContent = q.q;
-  document.getElementById('overlay').classList.add('show');
-  document.getElementById('answerSheet').classList.add('show');
-}
-
-// ================= الإرسال =================
-function submitAsk() {
+async function submitAsk() {
   const txt = document.getElementById('askText').value.trim();
   if (!txt) return;
-  publicPosts.unshift({
-    id: Date.now().toString(),
+
+  const newPost = {
     type: 'qa', q: txt, a: null,
-    asked_by: currentUser.id,
     asker_name: currentUser.name,
     asker_initials: currentUser.initials,
     created_at: new Date().toISOString()
-  });
+  };
+
+  if (sb) {
+    const { error } = await sb.from('posts').insert([newPost]);
+    if (error) { toast('❌ فشل الحفظ في قاعدة البيانات'); return; }
+    await loadDataFromSupabase();
+  } else {
+    publicPosts.unshift({ id: Date.now().toString(), ...newPost });
+    render();
+  }
+
   document.getElementById('askText').value = '';
   closeSheet();
-  render();
   toast('تم إرسال السؤال ✅');
 }
 
-function submitQuote() {
-  const txt = document.getElementById('quoteText').value.trim();
-  if (!txt) return;
-  publicPosts.unshift({
-    id: Date.now().toString(),
-    type: 'quote', text: txt,
-    author_name: currentUser.name,
-    created_at: new Date().toISOString()
-  });
-  document.getElementById('quoteText').value = '';
-  closeSheet();
-  render();
-  toast('تم نشر الاقتباس ❝');
-}
-
-function submitConfession() {
-  const txt = document.getElementById('confessionText').value.trim();
-  if (!txt) return;
-  confessions.unshift({
-    id: Date.now().toString(),
-    text: txt,
-    created_at: new Date().toISOString()
-  });
-  document.getElementById('confessionText').value = '';
-  closeSheet();
-  render();
-  toast('تم نشر الاعتراف 🎭');
-}
-
-function submitAnswer() {
-  const txt = document.getElementById('answerText').value.trim();
-  if (!txt || !activeQuestionId) return;
-  const target = publicPosts.find(p => p.id === activeQuestionId);
-  if (target) target.a = txt;
-  document.getElementById('answerText').value = '';
-  closeSheet();
-  render();
-  toast('تم نشر إجابتك ✅');
-}
-
 // ================= بدء التشغيل =================
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   if (!sb) {
     showAuthScreen();
   } else {
-    sb.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        currentUser = { id: session.user.id, name: 'عضو', initials: 'ع', coins: 50 };
-        showMainApp();
-        render();
-      } else {
-        showAuthScreen();
-      }
-    });
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      await initUserSession(session.user);
+    } else {
+      showAuthScreen();
+    }
   }
 });
