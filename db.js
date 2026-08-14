@@ -24,6 +24,20 @@ let activeQuestion = null;
 let authMode = 'login';
 let notifPanelOpen = false;
 
+// ================= أدوات إدارة الشاشات (احترافي) =================
+function showAuthScreen() {
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('appMobile').style.display = 'none';
+  document.getElementById('appDesktop').style.display = 'none';
+}
+
+function showMainApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  // إزالة inline style لترك التحكم الكامل لـ CSS Media Queries وتفادي التكرار
+  document.getElementById('appMobile').style.removeProperty('display');
+  document.getElementById('appDesktop').style.removeProperty('display');
+}
+
 // ================= AUTH (تسجيل الدخول / إنشاء حساب) =================
 function toggleAuthMode(){
   authMode = authMode === 'login' ? 'signup' : 'login';
@@ -82,9 +96,7 @@ async function submitAuth(){
 async function logout(){
   await sb.auth.signOut();
   currentUser = null;
-  document.getElementById('appMobile').style.display = 'none';
-  document.getElementById('appDesktop').style.display = 'none';
-  document.getElementById('authScreen').style.display = 'flex';
+  showAuthScreen();
 }
 
 async function loadProfile(userId){
@@ -102,9 +114,8 @@ async function bootApp(session){
     return;
   }
   currentUser = profile;
-  document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('appMobile').style.display = 'flex';
-  document.getElementById('appDesktop').style.display = 'flex';
+  
+  showMainApp();
 
   await Promise.all([loadPosts(), loadConfessions(), loadMyLikes(), loadNotifications(), loadPeople(), loadFollowing()]);
   render();
@@ -302,13 +313,11 @@ async function initApp(){
     if(session && !currentUser){ bootApp(session); }
     if(!session){
       currentUser = null;
-      document.getElementById('appMobile').style.display = 'none';
-      document.getElementById('appDesktop').style.display = 'none';
-      document.getElementById('authScreen').style.display = 'flex';
+      showAuthScreen();
     }
   });
 
   const { data: { session } } = await sb.auth.getSession();
   if(session){ bootApp(session); }
-  else { document.getElementById('authScreen').style.display = 'flex'; }
+  else { showAuthScreen(); }
 }
