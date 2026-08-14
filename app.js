@@ -1,27 +1,34 @@
-// ================= بيانات الاتصال =================
-let sb = null;
+// ================= التحكم بالشاشات =================
+function showAuthScreen() {
+  const auth = document.getElementById('authScreen');
+  const mob = document.getElementById('appMobile');
+  const desk = document.getElementById('appDesktop');
 
-function initSupabase() {
-  try {
-    if (typeof supabase !== 'undefined' && typeof SUPABASE_CONFIG !== 'undefined') {
-      sb = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-    }
-  } catch (e) {
-    console.warn("تعذر الاتصال بـ Supabase حالياً، سيعمل النظام في الوضع المحلي:", e);
+  if (auth) auth.style.display = 'flex';
+  if (mob) mob.style.display = 'none';
+  if (desk) desk.style.display = 'none';
+}
+
+function showMainApp() {
+  const auth = document.getElementById('authScreen');
+  const mob = document.getElementById('appMobile');
+  const desk = document.getElementById('appDesktop');
+
+  if (auth) auth.style.display = 'none';
+  if (window.innerWidth >= 850) {
+    if (desk) desk.style.display = 'block';
+    if (mob) mob.style.display = 'none';
+  } else {
+    if (mob) mob.style.display = 'block';
+    if (desk) desk.style.display = 'none';
   }
 }
 
-// ================= الحالة العامة =================
-let currentUser = null;
-let currentTab = 'questions';
-let publicPosts = [
-  { id: '1', type: 'qa', q: 'ما هو هدفك اليوم؟', a: 'العمل وتطوير المهارات.', asker_name: 'أحمد', asker_initials: 'أ', created_at: new Date().toISOString() }
-];
-let confessions = [
-  { id: 'c1', text: 'هذا اعتراف تجريبي للتأكد من المظهر.', created_at: new Date().toISOString() }
-];
+function switchTab(tab) {
+  currentTab = tab;
+  render();
+}
 
-// ================= أدوات الواجهة =================
 function toast(msg) {
   const t = document.getElementById('toast');
   if (!t) return;
@@ -35,40 +42,22 @@ function timeAgo(iso) {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
   if (diff < 60) return 'الآن';
   if (diff < 3600) return `قبل ${Math.floor(diff / 60)} دقيقة`;
-  return `قبل ${Math.floor(diff / 3600)} ساعة`;
-}
-
-function showAuthScreen() {
-  document.getElementById('authScreen').style.display = 'flex';
-  document.getElementById('appMobile').style.display = 'none';
-  document.getElementById('appDesktop').style.display = 'none';
-}
-
-function showMainApp() {
-  document.getElementById('authScreen').style.display = 'none';
-  // التحقق من حجم الشاشة لعرض الواجهة المناسبة
-  if (window.innerWidth >= 850) {
-    document.getElementById('appDesktop').style.display = 'block';
-    document.getElementById('appMobile').style.display = 'none';
-  } else {
-    document.getElementById('appMobile').style.display = 'block';
-    document.getElementById('appDesktop').style.display = 'none';
-  }
-}
-
-function switchTab(tabName) {
-  currentTab = tabName;
-  render();
+  return `قبل ${Math.floor(diff / 86400)} يوم`;
 }
 
 function enableDemoMode() {
   currentUser = { id: 'demo_user', name: 'زائر تجريبي', initials: 'ز', coins: 50 };
+  publicPosts = [
+    { id: '1', type: 'qa', q: 'ما هو هدفك اليوم؟', a: 'تطوير التطبيق بنجاح.', asker_name: 'أحمد', asker_initials: 'أ', created_at: new Date().toISOString() }
+  ];
+  confessions = [
+    { id: 'c1', text: 'اعتراف تجريبي.', created_at: new Date().toISOString() }
+  ];
   showMainApp();
   render();
-  toast('🚀 تم الدخول بنجاح');
+  toast('🚀 دخلت بوضع المعاينة');
 }
 
-// ================= العرض والواجهات =================
 function render() {
   if (!currentUser) return;
 
@@ -111,14 +100,7 @@ function renderQuestions() {
 }
 
 function renderQuotes() {
-  return `
-    <div class="page-title">الاقتباسات</div>
-    <div style="margin-top:14px;">
-      <div class="card">
-        <div style="font-family:'El Messiri',sans-serif; font-size:16px;">"العلم نور والجهل تاركٌ صاحبه في الظلمات."</div>
-      </div>
-    </div>
-  `;
+  return `<div class="page-title">الاقتباسات</div><div class="card" style="margin-top:14px;">لا توجد اقتباسات بعد</div>`;
 }
 
 function renderConfessions() {
@@ -140,18 +122,19 @@ function renderConfessions() {
 
 function renderProfile() {
   return `
-    <div class="card" style="text-align:center; padding: 20px;">
+    <div class="card" style="text-align:center; padding:20px;">
       <div class="avatar" style="width:60px; height:60px; margin:0 auto 10px; font-size:22px;">${currentUser.initials}</div>
       <h3>${currentUser.name}</h3>
       <p style="color:var(--muted); font-size:13px; margin-top:4px;">الرصيد: ${currentUser.coins} 🪙</p>
-      <button class="btn-primary" style="margin-top:16px;" onclick="location.reload()">تسجيل الخروج</button>
+      <button class="btn-primary" style="margin-top:16px;" onclick="logout()">تسجيل الخروج</button>
     </div>
   `;
 }
 
-// ================= التشغيل الإجباري المباشر =================
-window.onload = () => {
-  initSupabase();
-  // إظهار شاشة الدخول فوراً وبدون أي تأخير
+// بدء التشغيل الفوري المضمون
+document.addEventListener('DOMContentLoaded', () => {
   showAuthScreen();
-};
+  if (typeof initApp === 'function') {
+    initApp();
+  }
+});
