@@ -135,7 +135,7 @@ async function loadNotifications(){
 }
 async function loadPeople(){
   if(!currentUser) return;
-  const { data, error } = await sb.from('profiles').select('id,name,initials,vip').neq('id', currentUser.id).limit(20);
+  const { data, error } = await sb.from('profiles').select('id,name,initials,vip,avatar_url').neq('id', currentUser.id).limit(20);
   if(error){ console.warn('people load error:', error.message); return; }
   peopleDirectory = data || [];
 }
@@ -151,9 +151,14 @@ function subscribeRealtime(){
   sb.channel('notif-changes').on('postgres_changes', { event:'*', schema:'public', table:'notifications', filter:`user_id=eq.${currentUser.id}` }, () => loadNotifications()).subscribe();
 }
 
-async function pushNotification(userId, text){
+async function pushNotification(userId, text, meta={}){
   if(!userId || userId === currentUser.id) return; // ما ننبّه المستخدم عن فعله هو نفسه
-  await sb.from('notifications').insert([{ user_id:userId, text, read:false }]);
+  await sb.from('notifications').insert([{
+    user_id:userId, text, read:false,
+    type: meta.type || null,
+    post_id: meta.postId || null,
+    confession_id: meta.confessionId || null
+  }]);
 }
 
 // ================= التفاعلات (لايك / متابعة / VIP) =================
@@ -170,7 +175,7 @@ async function toggleLike(postId){
     item.likes += 1;
     sb.from('likes').insert([{user_id:currentUser.id, post_id:postId}]).then(()=>{});
     const owner = item.type === 'quote' ? item.author_id : (item.answered_by || item.asked_by);
-    pushNotification(owner, `${currentUser.name} أعجب بمنشورك`);
+    pushNotification(owner, `${currentUser.name} أعجب بمنشورك`, {type:'like', postId: postId});
   }
   sb.rpc('increment_post_likes', { pid: postId, delta: alreadyLiked ? -1 : 1 }).then(()=>{});
   render();
@@ -200,7 +205,7 @@ async function toggleFollow(targetId){
     followingIds.add(targetId);
     await sb.from('follows').insert([{follower_id:currentUser.id, following_id:targetId}]);
     toast('تمت المتابعة ✅');
-    pushNotification(targetId, `${currentUser.name} بدأ يتابعك`);
+    pushNotification(targetId, `${currentUser.name} بدأ يتابعك`, {type:'follow'});
   }
   render();
 }
@@ -221,7 +226,8 @@ async function submitAsk(){
     type:'qa', q:txt, a:null, anon,
     asked_by: currentUser.id,
     asker_name: anon ? null : currentUser.name,
-    asker_initials: anon ? null : currentUser.initials
+    asker_initials: anon ? null : currentUser.initials,
+    asker_avatar: anon ? null : (currentUser.avatar_url || null)
   }]);
   if(error){ toast('❌ ما قدرنا ننشر السؤال: ' + error.message); console.warn(error.message); return; }
   toast('✅ تم إرسال سؤالك للجميع');
@@ -235,7 +241,8 @@ async function submitShoutout(){
   if(currentUser.coins < 15){ toast('رصيدك من ASKcoins غير كافٍ'); return; }
   const { error } = await sb.from('posts').insert([{
     type:'qa', q:txt, a:null, anon:false, is_shoutout:true,
-    asked_by: currentUser.id, asker_name: currentUser.name, asker_initials: currentUser.initials
+    asked_by: currentUser.id, asker_name: currentUser.name, asker_initials: currentUser.initials,
+    asker_avatar: currentUser.avatar_url || null
   }]);
   if(error){ toast('❌ ما قدرنا ننشر الشوت أوت: ' + error.message); console.warn(error.message); return; }
   await sb.from('profiles').update({coins: currentUser.coins - 15}).eq('id', currentUser.id);
@@ -251,7 +258,8 @@ async function submitQuote(){
   if(!txt){ toast('اكتب الاقتباس أولاً'); return; }
   const { error } = await sb.from('posts').insert([{
     type:'quote', text:txt, topic:'الكل', anon:false,
-    author_id: currentUser.id, author_name: currentUser.name, author_initials: currentUser.initials
+    author_id: currentUser.id, author_name: currentUser.name, author_initials: currentUser.initials,
+    author_avatar: currentUser.avatar_url || null
   }]);
   if(error){ toast('❌ ما قدرنا ننشر الاقتباس: ' + error.message); console.warn(error.message); return; }
   toast('❝ تم نشر اقتباسك للجميع');
@@ -279,10 +287,87 @@ async function submitAnswer(){
   if(error){ toast('❌ صار خلل: ' + error.message); console.warn(error.message); return; }
   await sb.from('profiles').update({coins: currentUser.coins + 3}).eq('id', currentUser.id);
   currentUser.coins += 3;
-  pushNotification(activeQuestion.asked_by, `${currentUser.name} جاوب على سؤالك`);
+  pushNotification(activeQuestion.asked_by, `${currentUser.name} جاوب على سؤالك`, {type:'answer', postId: activeQuestion.id});
   toast('✅ تم نشر إجابتك للجميع');
   closeSheet();
   loadPosts();
+  render();
+}
+
+// ================= التعليقات =================
+let activeCommentTarget = null; // {type:'post'|'confession', id}
+let currentComments = [];
+
+async function openComments(type, id){
+  activeCommentTarget = {type, id};
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('commentsSheet').classList.add('show');
+  document.getElementById('commentsList').innerHTML = `<div class="muted" style="padding:20px;text-align:center;font-size:12px;">...جاري التحميل</div>`;
+  const col = type === 'post' ? 'post_id' : 'confession_id';
+  const { data, error } = await sb.from('comments').select('*').eq(col, id).order('created_at', { ascending:true });
+  if(error){ document.getElementById('commentsList').innerHTML = `<div class="muted" style="padding:20px;text-align:center;font-size:12px;">تعذر تحميل التعليقات</div>`; console.warn(error.message); return; }
+  currentComments = data || [];
+  renderCommentsList();
+}
+function renderCommentsList(){
+  const el = document.getElementById('commentsList');
+  if(!el) return;
+  if(currentComments.length === 0){
+    el.innerHTML = `<div class="empty-state" style="padding:22px 10px;"><div class="big">💬</div>ولا فيه تعليق بعد<br>كن أول من يعلّق</div>`;
+    return;
+  }
+  el.innerHTML = currentComments.map(c => `
+    <div class="comment-item">
+      ${c.user_avatar ? `<div class="avatar"><img class="avatar-img" src="${c.user_avatar}"></div>` : `<div class="avatar">${c.user_initials||'?'}</div>`}
+      <div class="comment-body">
+        <b>${c.user_name || 'مستخدم'}</b>
+        <div class="ctext">${c.text}</div>
+        <div class="muted" style="font-size:9.5px; margin-top:2px;">${timeAgo(c.created_at)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+async function submitComment(){
+  const txt = document.getElementById('commentText').value.trim();
+  if(!txt){ toast('اكتب تعليقاً أولاً'); return; }
+  if(!activeCommentTarget) return;
+  const { type, id } = activeCommentTarget;
+  const row = {
+    user_id: currentUser.id, user_name: currentUser.name,
+    user_initials: currentUser.initials, user_avatar: currentUser.avatar_url || null,
+    text: txt
+  };
+  row[type === 'post' ? 'post_id' : 'confession_id'] = id;
+  const { error } = await sb.from('comments').insert([row]);
+  if(error){ toast('❌ ما قدرنا ننشر التعليق: ' + error.message); console.warn(error.message); return; }
+  document.getElementById('commentText').value = '';
+  if(type === 'post'){
+    const item = publicPosts.find(p => p.id === id);
+    if(item) item.comments = (item.comments||0) + 1;
+    sb.rpc('increment_post_comments', { pid:id, delta:1 }).then(()=>{});
+  } else {
+    const item = confessions.find(c => c.id === id);
+    if(item) item.comments = (item.comments||0) + 1;
+    sb.rpc('increment_confession_comments', { cid:id, delta:1 }).then(()=>{});
+  }
+  render();
+  openComments(type, id);
+}
+
+// ================= الصورة الشخصية =================
+async function uploadAvatar(file){
+  if(!file || !currentUser) return;
+  toast('⏳ جاري رفع الصورة...');
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const path = `${currentUser.id}/avatar.${ext}`;
+  const { error: upErr } = await sb.storage.from('avatars').upload(path, file, { upsert:true });
+  if(upErr){ toast('❌ ما قدرنا نرفع الصورة: ' + upErr.message); console.warn(upErr.message); return; }
+  const { data } = sb.storage.from('avatars').getPublicUrl(path);
+  const publicUrl = data.publicUrl + '?t=' + Date.now();
+  const { error: updErr } = await sb.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.id);
+  if(updErr){ toast('❌ ما قدرنا نحفظ الصورة: ' + updErr.message); console.warn(updErr.message); return; }
+  currentUser.avatar_url = publicUrl;
+  toast('✅ تم تحديث صورتك الشخصية');
   render();
 }
 
