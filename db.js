@@ -71,8 +71,18 @@ async function submitAuth(){
   btn.textContent = '...';
 
   if(authMode === 'signup'){
-    const { data, error } = await sb.auth.signUp({ email, password });
+    // إضافة emailRedirectTo لتجنب خطأ Invalid path
+    const { data, error } = await sb.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: window.location.href,
+        data: { name: name }
+      }
+    });
+
     if(error){ showAuthError(error.message); btn.disabled=false; btn.textContent='إنشاء الحساب'; return; }
+
     if(data.user){
       const initials = name.trim()[0] || 'A';
       const { error: profileErr } = await sb.from('profiles').insert([{
@@ -80,6 +90,7 @@ async function submitAuth(){
       }]);
       if(profileErr) console.warn('profile create warning:', profileErr.message);
     }
+
     if(!data.session){
       toast('تم إنشاء الحساب! تحقق من بريدك لتأكيد الحساب ثم سجّل دخولك.');
       toggleAuthMode();
@@ -90,7 +101,6 @@ async function submitAuth(){
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if(error){ showAuthError(error.message); btn.disabled=false; btn.textContent='دخول'; return; }
   }
-  // onAuthStateChange بتتكفل تفتح التطبيق بمجرد ما تصير الجلسة جاهزة
 }
 
 async function logout(){
