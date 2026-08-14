@@ -2,15 +2,22 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>ASK & Quotation</title>
+
+<!-- الخطوط -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
+
+<!-- ملف التنسيقات الرئيسي -->
 <link rel="stylesheet" href="style.css">
+
+<!-- مكتبة Supabase CDN الرسمية -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
+<!-- شاشة التنبيه لإعداد Supabase عند البداية -->
 <div id="setupNotice" style="display:none;">
   <div class="box">
     <h2>الموقع يحتاج إعداد أول مرة</h2>
@@ -18,11 +25,12 @@
   </div>
 </div>
 
+<!-- شاشة تسجيل الدخول وإنشاء الحساب -->
 <div id="authScreen" style="display:none;">
   <div class="auth-card">
     <div class="auth-logo">
-      <div class="logo-mark" style="background:var(--orange);">A؟</div>
-      <div class="logo-text" style="color:var(--ink);">ASK <span style="color:var(--red);">&Q</span></div>
+      <div class="logo-mark">A؟</div>
+      <div class="logo-text">ASK <span>&Q</span></div>
     </div>
     <div class="auth-title" id="authTitle">تسجيل الدخول</div>
     <div class="auth-sub" id="authSub">أدخل بياناتك للمتابعة</div>
@@ -47,7 +55,7 @@
 </div>
 
 <!-- ===================== MOBILE APP ===================== -->
-<div class="app-mobile" id="appMobile" style="display:none;">
+<div class="app-mobile" id="appMobile">
 
   <div class="topbar">
     <div class="logo">
@@ -101,16 +109,19 @@
         <span>رصيد ASKcoins</span>
       </div>
     </aside>
+
     <main class="d-main" id="desktopContent"></main>
     <aside class="d-sidebar-right" id="desktopSidebarRight"></aside>
   </div>
 </div>
 
+<!-- لوحة الإشعارات -->
 <div class="notif-panel" id="notifPanel"></div>
 
+<!-- خلفية التعتيم -->
 <div class="overlay" id="overlay" onclick="closeSheet()"></div>
 
-<!-- composer sheet -->
+<!-- composer sheet (نافذة إنشـاء جديد) -->
 <div class="sheet" id="composerSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title">إنشاء جديد</div>
@@ -148,7 +159,7 @@
   </div>
 </div>
 
-<!-- answer sheet -->
+<!-- answer sheet (نافذة الإجابة) -->
 <div class="sheet" id="answerSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title">الإجابة على السؤال</div>
@@ -157,11 +168,14 @@
   <button class="btn-primary" onclick="submitAnswer()">نشر الإجابة</button>
 </div>
 
+<!-- التنبيه السريع Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- ملفات السكربت مرتبة بشكل صحيح جداً -->
 <script src="config.js"></script>
 <script src="supabase-client.js"></script>
 <script src="db.js"></script>
 <script src="app.js"></script>
+
 </body>
 </html>
