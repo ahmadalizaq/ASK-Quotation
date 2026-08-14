@@ -12,16 +12,16 @@
 <!-- التنسيق الرئيسي -->
 <link rel="stylesheet" href="style.css">
 
-<!-- مكتبة Supabase JS CDN -->
+<!-- مكتبة Supabase CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<!-- شاشة التنبيه للتهيجة -->
+<!-- شاشة التنبيه للتهيئة -->
 <div id="setupNotice" style="display:none;">
   <div class="box">
-    <h2>الموقع يحتاج إلى إعداد أول مرة</h2>
-    <p style="font-size:13px; line-height:1.8;">يرجى ربط Supabase وضبط المتغيرات داخل ملف <code>config.js</code> للبدء.</p>
+    <h2>الموقع يحتاج إلى إعداد البيانات</h2>
+    <p style="font-size:13px; line-height:1.8;">يرجى وضع روابط Supabase الخاصة بك في أعلى ملف <code>app.js</code> للبدء.</p>
   </div>
 </div>
 
@@ -55,7 +55,7 @@
 </div>
 
 <!-- ===================== واجهة الموبايل ===================== -->
-<div class="app-mobile" id="appMobile">
+<div class="app-mobile" id="appMobile" style="display:none;">
   <div class="topbar">
     <div class="logo">
       <div class="logo-mark">A؟</div>
@@ -80,7 +80,7 @@
 </div>
 
 <!-- ===================== واجهة سطح المكتب (DESKTOP) ===================== -->
-<div class="app-desktop" id="appDesktop">
+<div class="app-desktop" id="appDesktop" style="display:none;">
   <div class="d-header">
     <div class="logo">
       <div class="logo-mark">A؟</div>
@@ -114,7 +114,7 @@
   </div>
 </div>
 
-<!-- الإشعارات والبطاقات المنبثقة -->
+<!-- الإشعارات والنوافذ المنبثقة -->
 <div class="notif-panel" id="notifPanel"></div>
 <div class="overlay" id="overlay" onclick="closeSheet()"></div>
 
@@ -167,9 +167,7 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- السكربتات المربوطة -->
-<script src="config.js"></script>
-<script src="supabase-client.js"></script>
+<!-- ملف التشغيل الرئيسي -->
 <script src="app.js"></script>
 
 </body>
