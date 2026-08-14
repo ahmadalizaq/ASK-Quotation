@@ -24,20 +24,6 @@ let activeQuestion = null;
 let authMode = 'login';
 let notifPanelOpen = false;
 
-// ================= أدوات إدارة الشاشات (احترافي) =================
-function showAuthScreen() {
-  document.getElementById('authScreen').style.display = 'flex';
-  document.getElementById('appMobile').style.display = 'none';
-  document.getElementById('appDesktop').style.display = 'none';
-}
-
-function showMainApp() {
-  document.getElementById('authScreen').style.display = 'none';
-  // إزالة inline style لترك التحكم الكامل لـ CSS Media Queries وتفادي التكرار
-  document.getElementById('appMobile').style.removeProperty('display');
-  document.getElementById('appDesktop').style.removeProperty('display');
-}
-
 // ================= AUTH (تسجيل الدخول / إنشاء حساب) =================
 function toggleAuthMode(){
   authMode = authMode === 'login' ? 'signup' : 'login';
@@ -71,18 +57,8 @@ async function submitAuth(){
   btn.textContent = '...';
 
   if(authMode === 'signup'){
-    // إضافة emailRedirectTo لتجنب خطأ Invalid path
-    const { data, error } = await sb.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.href,
-        data: { name: name }
-      }
-    });
-
+    const { data, error } = await sb.auth.signUp({ email, password });
     if(error){ showAuthError(error.message); btn.disabled=false; btn.textContent='إنشاء الحساب'; return; }
-
     if(data.user){
       const initials = name.trim()[0] || 'A';
       const { error: profileErr } = await sb.from('profiles').insert([{
@@ -90,7 +66,6 @@ async function submitAuth(){
       }]);
       if(profileErr) console.warn('profile create warning:', profileErr.message);
     }
-
     if(!data.session){
       toast('تم إنشاء الحساب! تحقق من بريدك لتأكيد الحساب ثم سجّل دخولك.');
       toggleAuthMode();
@@ -101,12 +76,15 @@ async function submitAuth(){
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if(error){ showAuthError(error.message); btn.disabled=false; btn.textContent='دخول'; return; }
   }
+  // onAuthStateChange بتتكفل تفتح التطبيق بمجرد ما تصير الجلسة جاهزة
 }
 
 async function logout(){
   await sb.auth.signOut();
   currentUser = null;
-  showAuthScreen();
+  document.getElementById('appMobile').style.display = 'none';
+  document.getElementById('appDesktop').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
 }
 
 async function loadProfile(userId){
@@ -124,8 +102,9 @@ async function bootApp(session){
     return;
   }
   currentUser = profile;
-  
-  showMainApp();
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appMobile').style.display = 'flex';
+  document.getElementById('appDesktop').style.display = 'flex';
 
   await Promise.all([loadPosts(), loadConfessions(), loadMyLikes(), loadNotifications(), loadPeople(), loadFollowing()]);
   render();
@@ -323,11 +302,13 @@ async function initApp(){
     if(session && !currentUser){ bootApp(session); }
     if(!session){
       currentUser = null;
-      showAuthScreen();
+      document.getElementById('appMobile').style.display = 'none';
+      document.getElementById('appDesktop').style.display = 'none';
+      document.getElementById('authScreen').style.display = 'flex';
     }
   });
 
   const { data: { session } } = await sb.auth.getSession();
   if(session){ bootApp(session); }
-  else { showAuthScreen(); }
+  else { document.getElementById('authScreen').style.display = 'flex'; }
 }
