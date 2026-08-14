@@ -1,25 +1,27 @@
-// 🔴 ضع بيانات Supabase الخاصة بك هنا عند الجاهزية
-const SUPABASE_URL = 'https://exoqrqndxzqibxwmsebv.supabase.co'; 
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4b3FycW5keHpxaWJ4d21zZWJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3MDg2NTMsImV4cCI6MjEwMjI4NDY1M30.uBMp6_k8IHCN-gscpKcPsMqlwf03g-b4C2wGbJHCWpg';
-
+// ================= بيانات الاتصال =================
 let sb = null;
 
-// تهيئة الاتصال وآليات الأمان
-try {
-  if (typeof supabase !== 'undefined' && !SUPABASE_URL.includes('YOUR-PROJECT')) {
-    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+function initSupabase() {
+  try {
+    if (typeof supabase !== 'undefined' && typeof SUPABASE_CONFIG !== 'undefined') {
+      sb = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+    }
+  } catch (e) {
+    console.warn("تعذر الاتصال بـ Supabase حالياً، سيعمل النظام في الوضع المحلي:", e);
   }
-} catch (e) {
-  console.error("فشل تهيئة Supabase:", e);
 }
 
 // ================= الحالة العامة =================
 let currentUser = null;
 let currentTab = 'questions';
-let publicPosts = [];
-let confessions = [];
+let publicPosts = [
+  { id: '1', type: 'qa', q: 'ما هو هدفك اليوم؟', a: 'العمل وتطوير المهارات.', asker_name: 'أحمد', asker_initials: 'أ', created_at: new Date().toISOString() }
+];
+let confessions = [
+  { id: 'c1', text: 'هذا اعتراف تجريبي للتأكد من المظهر.', created_at: new Date().toISOString() }
+];
 
-// ================= أدوات مساعدة =================
+// ================= أدوات الواجهة =================
 function toast(msg) {
   const t = document.getElementById('toast');
   if (!t) return;
@@ -29,47 +31,41 @@ function toast(msg) {
 }
 
 function timeAgo(iso) {
-  if (!iso) return '';
+  if (!iso) return 'الآن';
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
   if (diff < 60) return 'الآن';
   if (diff < 3600) return `قبل ${Math.floor(diff / 60)} دقيقة`;
-  if (diff < 86400) return `قبل ${Math.floor(diff / 3600)} ساعة`;
-  return `قبل ${Math.floor(diff / 86400)} يوم`;
+  return `قبل ${Math.floor(diff / 3600)} ساعة`;
 }
 
-// ================= التحكم بالشاشات =================
 function showAuthScreen() {
-  const auth = document.getElementById('authScreen');
-  const mob = document.getElementById('appMobile');
-  const desk = document.getElementById('appDesktop');
-
-  if (auth) auth.style.display = 'flex';
-  if (mob) mob.style.display = 'none';
-  if (desk) desk.style.display = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('appMobile').style.display = 'none';
+  document.getElementById('appDesktop').style.display = 'none';
 }
 
 function showMainApp() {
-  const auth = document.getElementById('authScreen');
-  const mob = document.getElementById('appMobile');
-  const desk = document.getElementById('appDesktop');
-
-  if (auth) auth.style.display = 'none';
-  if (mob) mob.style.display = 'block';
-  if (desk) desk.style.display = 'block';
+  document.getElementById('authScreen').style.display = 'none';
+  // التحقق من حجم الشاشة لعرض الواجهة المناسبة
+  if (window.innerWidth >= 850) {
+    document.getElementById('appDesktop').style.display = 'block';
+    document.getElementById('appMobile').style.display = 'none';
+  } else {
+    document.getElementById('appMobile').style.display = 'block';
+    document.getElementById('appDesktop').style.display = 'none';
+  }
 }
 
-// ================= الوضع التجريبي =================
+function switchTab(tabName) {
+  currentTab = tabName;
+  render();
+}
+
 function enableDemoMode() {
   currentUser = { id: 'demo_user', name: 'زائر تجريبي', initials: 'ز', coins: 50 };
-  publicPosts = [
-    { id: '1', type: 'qa', q: 'ما هو اقتباسك المفضل؟', a: 'العلم نور والجهل تاركٌ صاحبه في الظلمات.', asker_name: 'أحمد', asker_initials: 'أ', created_at: new Date().toISOString() }
-  ];
-  confessions = [
-    { id: 'c1', text: 'هذا منشور تجريبي للتأكد من شاشة العرض.', created_at: new Date().toISOString() }
-  ];
   showMainApp();
   render();
-  toast('🚀 دخلت بوضع المعاينة التجريبية');
+  toast('🚀 تم الدخول بنجاح');
 }
 
 // ================= العرض والواجهات =================
@@ -100,14 +96,14 @@ function renderQuestions() {
         qas.map(it => `
           <div class="card">
             <div class="card-head">
-              <div class="avatar ${it.anon ? 'anon' : ''}">${it.anon ? '؟' : (it.asker_initials || '?')}</div>
+              <div class="avatar">${it.asker_initials || '?'}</div>
               <div class="name-line">
-                <b>${it.anon ? 'سؤال مجهول' : (it.asker_name || 'عضو')}</b>
+                <b>${it.asker_name || 'عضو'}</b>
                 <small>${timeAgo(it.created_at)}</small>
               </div>
             </div>
             <div class="q-bubble">${it.q}</div>
-            ${it.a ? `<div class="a-text">${it.a}</div>` : `<button class="btn-primary" style="padding:8px 12px; font-size:12px; width:auto;" onclick="openAnswer('${it.id}')">إجابة</button>`}
+            ${it.a ? `<div class="a-text">${it.a}</div>` : ''}
           </div>
         `).join('')}
     </div>
@@ -115,17 +111,12 @@ function renderQuestions() {
 }
 
 function renderQuotes() {
-  const quotes = publicPosts.filter(p => p.type === 'quote');
   return `
     <div class="page-title">الاقتباسات</div>
     <div style="margin-top:14px;">
-      ${quotes.length === 0 ? `<div class="empty-state">لا توجد اقتباسات بعد</div>` :
-        quotes.map(q => `
-          <div class="card">
-            <div style="font-family:'El Messiri',sans-serif; font-size:16px; line-height:1.6;">${q.text || q.q}</div>
-            <div style="text-align:left; font-size:12px; color:var(--muted); margin-top:8px;">— ${q.author_name || q.asker_name || 'مجهول'}</div>
-          </div>
-        `).join('')}
+      <div class="card">
+        <div style="font-family:'El Messiri',sans-serif; font-size:16px;">"العلم نور والجهل تاركٌ صاحبه في الظلمات."</div>
+      </div>
     </div>
   `;
 }
@@ -134,23 +125,22 @@ function renderConfessions() {
   return `
     <div class="page-title">الاعترافات</div>
     <div style="margin-top:14px;">
-      ${confessions.length === 0 ? `<div class="empty-state">لا توجد اعترافات بعد</div>` :
-        confessions.map(c => `
-          <div class="card">
-            <div class="card-head">
-              <div class="avatar anon">🎭</div>
-              <div class="name-line"><b>اعتراف مجهول</b><small>${timeAgo(c.created_at)}</small></div>
-            </div>
-            <div class="a-text">${c.text}</div>
+      ${confessions.map(c => `
+        <div class="card">
+          <div class="card-head">
+            <div class="avatar anon">🎭</div>
+            <div class="name-line"><b>اعتراف مجهول</b><small>${timeAgo(c.created_at)}</small></div>
           </div>
-        `).join('')}
+          <div class="a-text">${c.text}</div>
+        </div>
+      `).join('')}
     </div>
   `;
 }
 
 function renderProfile() {
   return `
-    <div class="card" style="text-align:center;">
+    <div class="card" style="text-align:center; padding: 20px;">
       <div class="avatar" style="width:60px; height:60px; margin:0 auto 10px; font-size:22px;">${currentUser.initials}</div>
       <h3>${currentUser.name}</h3>
       <p style="color:var(--muted); font-size:13px; margin-top:4px;">الرصيد: ${currentUser.coins} 🪙</p>
@@ -159,34 +149,9 @@ function renderProfile() {
   `;
 }
 
-// ================= بدء التشغيل المضمون (الحل للمشكلة) =================
-window.addEventListener('DOMContentLoaded', () => {
-  // إجبار النظام على فتح شاشة التسجيل فوراً كخيار افتراضي لحماية الصفحة من التعليق
+// ================= التشغيل الإجباري المباشر =================
+window.onload = () => {
+  initSupabase();
+  // إظهار شاشة الدخول فوراً وبدون أي تأخير
   showAuthScreen();
-
-  if (!sb) return;
-
-  // إعطاء مهلة أقصاها 2.5 ثانية للتحقق من الجلسة
-  const sessionTimeout = setTimeout(() => {
-    console.warn("استغرق الاتصال بـ Supabase وقتاً طويلاً، تم تحويلك لشاشة الدخول.");
-  }, 2500);
-
-  sb.auth.getSession()
-    .then(({ data }) => {
-      clearTimeout(sessionTimeout);
-      if (data && data.session) {
-        currentUser = {
-          id: data.session.user.id,
-          name: data.session.user.email ? data.session.user.email.split('@')[0] : 'عضو',
-          initials: 'ع',
-          coins: 50
-        };
-        showMainApp();
-        render();
-      }
-    })
-    .catch(err => {
-      clearTimeout(sessionTimeout);
-      console.error("خطأ في التحقق من الجلسة:", err);
-    });
-});
+};
