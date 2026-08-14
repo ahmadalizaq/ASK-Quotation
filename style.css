@@ -51,6 +51,14 @@
   #setupNotice h2{ font-family:'El Messiri',sans-serif; margin-top:0; }
   #setupNotice code{ background:var(--paper-soft); padding:2px 6px; border-radius:6px; font-size:12px; }
 
+  /* لا تظهر أي واجهة (موبايل أو ديسكتوب) قبل تسجيل الدخول — الجافاسكربت يضيف/يشيل
+     كلاس app-active على body، وهذا القاعدة تتحكم بالحالتين بشكل موحّد بدل استخدام
+     style.display المباشر (اللي كان يفعّل الاثنين بنفس الوقت ويسبب تكرار بالواجهة). */
+  body:not(.app-active) .app-mobile,
+  body:not(.app-active) .app-desktop{
+    display:none !important;
+  }
+
   /* ================= APP SHELL (mobile) — full-bleed, no floating card ================= */
   .app-mobile{
     width:100%; min-height:100vh; background: linear-gradient(165deg, #EA323C 0%, #D31E29 55%, #B9151F 100%);

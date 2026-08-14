@@ -82,8 +82,7 @@ async function submitAuth(){
 async function logout(){
   await sb.auth.signOut();
   currentUser = null;
-  document.getElementById('appMobile').style.display = 'none';
-  document.getElementById('appDesktop').style.display = 'none';
+  document.body.classList.remove('app-active');
   document.getElementById('authScreen').style.display = 'flex';
 }
 
@@ -103,8 +102,9 @@ async function bootApp(session){
   }
   currentUser = profile;
   document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('appMobile').style.display = 'flex';
-  document.getElementById('appDesktop').style.display = 'flex';
+  // نضيف كلاس على body بدل ما نتحكم بـ display مباشرة على العنصرين —
+  // هذا يخلي الـ CSS (media query) هو اللي يقرر أي واجهة تظهر حسب حجم الشاشة
+  document.body.classList.add('app-active');
 
   await Promise.all([loadPosts(), loadConfessions(), loadMyLikes(), loadNotifications(), loadPeople(), loadFollowing()]);
   render();
@@ -302,8 +302,7 @@ async function initApp(){
     if(session && !currentUser){ bootApp(session); }
     if(!session){
       currentUser = null;
-      document.getElementById('appMobile').style.display = 'none';
-      document.getElementById('appDesktop').style.display = 'none';
+      document.body.classList.remove('app-active');
       document.getElementById('authScreen').style.display = 'flex';
     }
   });
