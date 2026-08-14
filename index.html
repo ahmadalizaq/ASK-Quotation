@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<!-- استدعاء المكتبة مرة واحدة فقط -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -14,7 +15,7 @@
 <div id="setupNotice" style="display:none;">
   <div class="box">
     <h2>الموقع يحتاج إعداد أول مرة</h2>
-    <p style="font-size:13px; line-height:1.8;">لازم تربط قاعدة بيانات Supabase قبل ما يشتغل الموقع فعلياً. افتح ملف <code>SETUP.md</code> واتبع الخطوات.</p>
+    <p style="font-size:13px; line-height:1.8;">لازم تربط قاعدة بيانات Supabase قبل ما يشتغل الموقع فعلياً.</p>
   </div>
 </div>
 
@@ -28,8 +29,9 @@
     <div class="auth-title" id="authTitle">تسجيل الدخول</div>
     <div class="auth-sub" id="authSub">أدخل بياناتك للمتابعة</div>
     <div class="auth-error" id="authError"></div>
+    
     <div class="auth-field" id="nameField" style="display:none;">
-      <label>الاسم</label>
+      <label>اسمك</label>
       <input type="text" id="authName" placeholder="مثال: سارة">
     </div>
     <div class="auth-field">
@@ -40,7 +42,9 @@
       <label>كلمة المرور</label>
       <input type="password" id="authPassword" placeholder="6 أحرف على الأقل">
     </div>
+    
     <button class="btn-primary" id="authSubmitBtn" onclick="submitAuth()">دخول</button>
+    
     <div class="auth-switch" id="authSwitchLine">
       ماعندك حساب؟ <a onclick="toggleAuthMode()">أنشئ حساب جديد</a>
     </div>
@@ -81,7 +85,7 @@
       <div class="logo-text">ASK <span>&Q</span></div>
     </div>
     <div class="d-search">
-      <input type="text" id="dHeaderSearch" placeholder="ابحث عن اقتباس... واضغط Enter">
+      <input type="text" id="dHeaderSearch" placeholder="ابحث...">
     </div>
     <div class="d-header-actions">
       <div class="d-coin-chip">🪙 <span id="dCoinCount">0</span></div>
@@ -159,7 +163,7 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- ملفات JS بالترتيب الصحيح -->
+<!-- السكريبتات بالترتيب الصحيح والكامل -->
 <script src="config.js"></script>
 <script src="supabase-client.js"></script>
 <script src="db.js"></script>
