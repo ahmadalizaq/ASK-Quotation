@@ -57,15 +57,10 @@ async function submitAuth(){
   btn.textContent = '...';
 
   if(authMode === 'signup'){
-    const { data, error } = await sb.auth.signUp({ email, password });
+    // الاسم يترسل كـ user metadata — الـ trigger بقاعدة البيانات هو اللي ينشئ صف
+    // profiles تلقائياً (يشتغل حتى لو ما فيه جلسة دخول نشطة، مثلاً وقت تأكيد البريد)
+    const { data, error } = await sb.auth.signUp({ email, password, options:{ data:{ name } } });
     if(error){ showAuthError(error.message); btn.disabled=false; btn.textContent='إنشاء الحساب'; return; }
-    if(data.user){
-      const initials = name.trim()[0] || 'A';
-      const { error: profileErr } = await sb.from('profiles').insert([{
-        id: data.user.id, name, initials, coins: 50, vip: false
-      }]);
-      if(profileErr) console.warn('profile create warning:', profileErr.message);
-    }
     if(!data.session){
       toast('تم إنشاء الحساب! تحقق من بريدك لتأكيد الحساب ثم سجّل دخولك.');
       toggleAuthMode();
