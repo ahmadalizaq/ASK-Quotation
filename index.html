@@ -1,174 +1,171 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>ASK & Quotation</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ASK & Quotation</title>
 
-<!-- الخطوط الرسمية -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
+  <!-- الخطوط الرسمية -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
 
-<!-- التنسيق الرئيسي -->
-<link rel="stylesheet" href="style.css">
+  <!-- التنسيقات -->
+  <link rel="stylesheet" href="style.css">
 
-<!-- مكتبة Supabase CDN -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- مكتبة Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<!-- شاشة التنبيه للتهيئة -->
-<div id="setupNotice" style="display:none;">
-  <div class="box">
-    <h2>الموقع يحتاج إلى إعداد البيانات</h2>
-    <p style="font-size:13px; line-height:1.8;">يرجى وضع روابط Supabase الخاصة بك في أعلى ملف <code>app.js</code> للبدء.</p>
-  </div>
-</div>
-
-<!-- شاشة تسجيل الدخول -->
-<div id="authScreen" style="display:none;">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <div class="logo-mark">A؟</div>
-      <div class="logo-text">ASK <span>&Q</span></div>
-    </div>
-    <div class="auth-title" id="authTitle">تسجيل الدخول</div>
-    <div class="auth-sub" id="authSub">أدخل بياناتك للمتابعة</div>
-    <div class="auth-error" id="authError"></div>
-    <div class="auth-field" id="nameField" style="display:none;">
-      <label>اسمك</label>
-      <input type="text" id="authName" placeholder="مثال: سارة">
-    </div>
-    <div class="auth-field">
-      <label>البريد الإلكتروني</label>
-      <input type="email" id="authEmail" placeholder="you@example.com">
-    </div>
-    <div class="auth-field">
-      <label>كلمة المرور</label>
-      <input type="password" id="authPassword" placeholder="6 أحرف على الأقل">
-    </div>
-    <button class="btn-primary" id="authSubmitBtn" onclick="submitAuth()">دخول</button>
-    <div class="auth-switch" id="authSwitchLine">
-      ماعندك حساب؟ <a onclick="toggleAuthMode()">أنشئ حساب جديد</a>
-    </div>
-  </div>
-</div>
-
-<!-- ===================== واجهة الموبايل ===================== -->
-<div class="app-mobile" id="appMobile" style="display:none;">
-  <div class="topbar">
-    <div class="logo">
-      <div class="logo-mark">A؟</div>
-      <div class="logo-text">ASK <span>&Q</span></div>
-    </div>
-    <div class="top-actions">
-      <div class="icon-btn" onclick="toggleNotifPanel()">🔔<span class="badge-dot" id="notifBadgeM" style="display:none;">0</span></div>
-    </div>
-  </div>
-
-  <div class="content" id="content"></div>
-
-  <div class="nav-wrap">
-    <div class="bottom-nav">
-      <div class="nav-item active" data-tab="profile" onclick="switchTab('profile')"><div class="ic">👤</div><div class="lb">حسابي</div></div>
-      <div class="nav-item" data-tab="questions" onclick="switchTab('questions')"><div class="ic">❓</div><div class="lb">الأسئلة</div></div>
-      <div class="nav-item" data-tab="quotes" onclick="switchTab('quotes')"><div class="ic">❝</div><div class="lb">الاقتباسات</div></div>
-      <div class="nav-item" data-tab="confessions" onclick="switchTab('confessions')"><div class="ic">🎭</div><div class="lb">الاعترافات</div></div>
-    </div>
-    <div class="nav-fab" onclick="openComposer()">+</div>
-  </div>
-</div>
-
-<!-- ===================== واجهة سطح المكتب (DESKTOP) ===================== -->
-<div class="app-desktop" id="appDesktop" style="display:none;">
-  <div class="d-header">
-    <div class="logo">
-      <div class="logo-mark">A؟</div>
-      <div class="logo-text">ASK <span>&Q</span></div>
-    </div>
-    <div class="d-search">
-      <input type="text" id="dHeaderSearch" placeholder="ابحث عن اقتباس..." onkeydown="if(event.key==='Enter') headerSearch(this.value)">
-    </div>
-    <div class="d-header-actions">
-      <div class="d-coin-chip">🪙 <span id="dCoinCount">0</span></div>
-      <div class="icon-btn" onclick="toggleNotifPanel()">🔔<span class="badge-dot" id="notifBadgeD" style="display:none;">0</span></div>
-      <div class="icon-btn" onclick="switchTab('profile')">👤</div>
-    </div>
-  </div>
-
-  <div class="d-body">
-    <aside class="d-sidebar-left">
-      <button class="btn-primary" onclick="openComposer()">+ إنشاء جديد</button>
-      <div class="d-nav-item nav-item active" data-tab="profile" onclick="switchTab('profile')"><span class="ic">👤</span> حسابي</div>
-      <div class="d-nav-item nav-item" data-tab="questions" onclick="switchTab('questions')"><span class="ic">❓</span> الأسئلة</div>
-      <div class="d-nav-item nav-item" data-tab="quotes" onclick="switchTab('quotes')"><span class="ic">❝</span> الاقتباسات</div>
-      <div class="d-nav-item nav-item" data-tab="confessions" onclick="switchTab('confessions')"><span class="ic">🎭</span> الاعترافات</div>
-      <div class="d-side-widget">
-        <b id="dCoinWidget">0 🪙</b>
-        <span>رصيد ASKcoins</span>
+  <!-- شاشة تسجيل الدخول -->
+  <div id="authScreen">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="logo-mark">A؟</div>
+        <div class="logo-text">ASK <span>&Q</span></div>
       </div>
-    </aside>
-
-    <main class="d-main" id="desktopContent"></main>
-    <aside class="d-sidebar-right" id="desktopSidebarRight"></aside>
-  </div>
-</div>
-
-<!-- الإشعارات والنوافذ المنبثقة -->
-<div class="notif-panel" id="notifPanel"></div>
-<div class="overlay" id="overlay" onclick="closeSheet()"></div>
-
-<!-- Composer Sheet -->
-<div class="sheet" id="composerSheet">
-  <div class="sheet-handle"></div>
-  <div class="sheet-title">إنشاء جديد</div>
-  <div class="mode-row" id="composerTabs">
-    <div class="mode-opt active" data-mode="ask" onclick="setComposerMode('ask')"><span class="ic">❓</span><span class="lb">سؤال</span></div>
-    <div class="mode-opt" data-mode="shoutout" onclick="setComposerMode('shoutout')"><span class="ic">📢</span><span class="lb">شوت أوت</span></div>
-    <div class="mode-opt" data-mode="quote" onclick="setComposerMode('quote')"><span class="ic">❝</span><span class="lb">اقتباس</span></div>
-    <div class="mode-opt" data-mode="confession" onclick="setComposerMode('confession')"><span class="ic">🎭</span><span class="lb">اعتراف</span></div>
-  </div>
-
-  <div id="composerAskBody">
-    <textarea id="askText" rows="3" placeholder="اكتب سؤالك هنا..."></textarea>
-    <div class="toggle-row">
-      <span>سؤال مجهول</span>
-      <div class="toggle on" id="anonToggle" onclick="this.classList.toggle('on')"><div class="toggle-dot"></div></div>
+      <div class="auth-title" id="authTitle">تسجيل الدخول</div>
+      <div class="auth-sub" id="authSub">أدخل بياناتك للمتابعة</div>
+      <div class="auth-error" id="authError"></div>
+      
+      <div class="auth-field" id="nameField" style="display:none;">
+        <label>الاسم</label>
+        <input type="text" id="authName" placeholder="مثال: سارة">
+      </div>
+      <div class="auth-field">
+        <label>البريد الإلكتروني</label>
+        <input type="email" id="authEmail" placeholder="you@example.com">
+      </div>
+      <div class="auth-field">
+        <label>كلمة المرور</label>
+        <input type="password" id="authPassword" placeholder="6 أحرف على الأقل">
+      </div>
+      
+      <button class="btn-primary" id="authSubmitBtn" onclick="submitAuth()">دخول</button>
+      
+      <div class="auth-switch" id="authSwitchLine">
+        ليس لديك حساب؟ <a onclick="toggleAuthMode()">أنشئ حساباً جديداً</a>
+      </div>
+      
+      <button class="btn-demo" onclick="enableDemoMode()">🚀 الدخول كزائر (وضع المعاينة)</button>
     </div>
-    <button class="btn-primary" onclick="submitAsk()">إرسال السؤال</button>
   </div>
 
-  <div id="composerShoutBody" style="display:none;">
-    <textarea id="shoutText" rows="3" placeholder="اكتب نص الشوت أوت..."></textarea>
-    <div class="toggle-row"><span>التكلفة</span><b style="font-size:12px;color:var(--red)">15 🪙</b></div>
-    <button class="btn-primary" onclick="submitShoutout()">نشر الشوت أوت</button>
+  <!-- ================= واجهة الموبايل ================= -->
+  <div class="app-mobile" id="appMobile" style="display:none;">
+    <div class="topbar">
+      <div class="logo">
+        <div class="logo-mark">A؟</div>
+        <div class="logo-text">ASK <span>&Q</span></div>
+      </div>
+      <div class="top-actions">
+        <div class="icon-btn" onclick="toggleNotifPanel()">🔔<span class="badge-dot" id="notifBadgeM" style="display:none;">0</span></div>
+      </div>
+    </div>
+
+    <div class="content" id="content"></div>
+
+    <div class="nav-wrap">
+      <div class="bottom-nav">
+        <div class="nav-item active" data-tab="questions" onclick="switchTab('questions')"><div class="ic">❓</div><div class="lb">الأسئلة</div></div>
+        <div class="nav-item" data-tab="quotes" onclick="switchTab('quotes')"><div class="ic">❝</div><div class="lb">الاقتباسات</div></div>
+        <div class="nav-item" data-tab="confessions" onclick="switchTab('confessions')"><div class="ic">🎭</div><div class="lb">الاعترافات</div></div>
+        <div class="nav-item" data-tab="profile" onclick="switchTab('profile')"><div class="ic">👤</div><div class="lb">حسابي</div></div>
+      </div>
+      <div class="nav-fab" onclick="openComposer()">+</div>
+    </div>
   </div>
 
-  <div id="composerQuoteBody" style="display:none;">
-    <textarea id="quoteText" rows="3" placeholder="اكتب الاقتباس..."></textarea>
-    <button class="btn-primary" onclick="submitQuote()">نشر الاقتباس</button>
+  <!-- ================= واجهة سطح المكتب (DESKTOP) ================= -->
+  <div class="app-desktop" id="appDesktop" style="display:none;">
+    <div class="d-header">
+      <div class="logo">
+        <div class="logo-mark">A؟</div>
+        <div class="logo-text">ASK <span>&Q</span></div>
+      </div>
+      <div class="d-search">
+        <input type="text" id="dHeaderSearch" placeholder="ابحث عن اقتباس..." onkeydown="if(event.key==='Enter') headerSearch(this.value)">
+      </div>
+      <div class="d-header-actions">
+        <div class="d-coin-chip">🪙 <span id="dCoinCount">0</span></div>
+        <div class="icon-btn" onclick="toggleNotifPanel()">🔔<span class="badge-dot" id="notifBadgeD" style="display:none;">0</span></div>
+        <div class="icon-btn" onclick="switchTab('profile')">👤</div>
+      </div>
+    </div>
+
+    <div class="d-body">
+      <aside class="d-sidebar-left">
+        <button class="btn-primary" onclick="openComposer()">+ إنشاء جديد</button>
+        <div class="d-nav-item nav-item active" data-tab="questions" onclick="switchTab('questions')"><span class="ic">❓</span> الأسئلة</div>
+        <div class="d-nav-item nav-item" data-tab="quotes" onclick="switchTab('quotes')"><span class="ic">❝</span> الاقتباسات</div>
+        <div class="d-nav-item nav-item" data-tab="confessions" onclick="switchTab('confessions')"><span class="ic">🎭</span> الاعترافات</div>
+        <div class="d-nav-item nav-item" data-tab="profile" onclick="switchTab('profile')"><span class="ic">👤</span> حسابي</div>
+        <div class="d-side-widget">
+          <b id="dCoinWidget">0 🪙</b>
+          <span>رصيد ASKcoins</span>
+        </div>
+      </aside>
+
+      <main class="d-main" id="desktopContent"></main>
+      <aside class="d-sidebar-right" id="desktopSidebarRight"></aside>
+    </div>
   </div>
 
-  <div id="composerConfessionBody" style="display:none;">
-    <textarea id="confessionText" rows="4" placeholder="اكتب اعترافك..."></textarea>
-    <button class="btn-primary" onclick="submitConfession()">نشر الاعتراف</button>
+  <!-- النوافذ المنبثقة والإشعارات -->
+  <div class="notif-panel" id="notifPanel"></div>
+  <div class="overlay" id="overlay" onclick="closeSheet()"></div>
+
+  <!-- Composer Sheet -->
+  <div class="sheet" id="composerSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">إنشاء جديد</div>
+    <div class="mode-row" id="composerTabs">
+      <div class="mode-opt active" data-mode="ask" onclick="setComposerMode('ask')"><span class="ic">❓</span><span class="lb">سؤال</span></div>
+      <div class="mode-opt" data-mode="shoutout" onclick="setComposerMode('shoutout')"><span class="ic">📢</span><span class="lb">شوت أوت</span></div>
+      <div class="mode-opt" data-mode="quote" onclick="setComposerMode('quote')"><span class="ic">❝</span><span class="lb">اقتباس</span></div>
+      <div class="mode-opt" data-mode="confession" onclick="setComposerMode('confession')"><span class="ic">🎭</span><span class="lb">اعتراف</span></div>
+    </div>
+
+    <div id="composerAskBody">
+      <textarea id="askText" rows="3" placeholder="اكتب سؤالك هنا..."></textarea>
+      <div class="toggle-row">
+        <span>سؤال مجهول</span>
+        <div class="toggle on" id="anonToggle" onclick="this.classList.toggle('on')"><div class="toggle-dot"></div></div>
+      </div>
+      <button class="btn-primary" onclick="submitAsk()">إرسال السؤال</button>
+    </div>
+
+    <div id="composerShoutBody" style="display:none;">
+      <textarea id="shoutText" rows="3" placeholder="اكتب نص الشوت أوت..."></textarea>
+      <div class="toggle-row"><span>التكلفة</span><b style="font-size:12px;color:var(--red)">15 🪙</b></div>
+      <button class="btn-primary" onclick="submitShoutout()">نشر الشوت أوت</button>
+    </div>
+
+    <div id="composerQuoteBody" style="display:none;">
+      <textarea id="quoteText" rows="3" placeholder="اكتب الاقتباس..."></textarea>
+      <button class="btn-primary" onclick="submitQuote()">نشر الاقتباس</button>
+    </div>
+
+    <div id="composerConfessionBody" style="display:none;">
+      <textarea id="confessionText" rows="4" placeholder="اكتب اعترافك..."></textarea>
+      <button class="btn-primary" onclick="submitConfession()">نشر الاعتراف</button>
+    </div>
   </div>
-</div>
 
-<!-- Answer Sheet -->
-<div class="sheet" id="answerSheet">
-  <div class="sheet-handle"></div>
-  <div class="sheet-title">الإجابة على السؤال</div>
-  <div class="q-bubble" id="answerQuestionPreview"></div>
-  <textarea id="answerText" rows="4" placeholder="اكتب إجابتك..."></textarea>
-  <button class="btn-primary" onclick="submitAnswer()">نشر الإجابة</button>
-</div>
+  <!-- Answer Sheet -->
+  <div class="sheet" id="answerSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">الإجابة على السؤال</div>
+    <div class="q-bubble" id="answerQuestionPreview"></div>
+    <textarea id="answerText" rows="4" placeholder="اكتب إجابتك..."></textarea>
+    <button class="btn-primary" onclick="submitAnswer()">نشر الإجابة</button>
+  </div>
 
-<!-- Toast -->
-<div class="toast" id="toast"></div>
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
 
-<!-- ملف التشغيل الرئيسي -->
-<script src="app.js"></script>
+  <!-- الملف البرمجي -->
+  <script src="app.js"></script>
 
 </body>
 </html>
