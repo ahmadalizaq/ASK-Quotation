@@ -228,7 +228,7 @@ async function submitAsk(){
     asker_name: anon ? null : currentUser.name,
     asker_initials: anon ? null : currentUser.initials
   }]);
-  if(error){ toast('ما قدرنا ننشر السؤال'); console.warn(error.message); return; }
+  if(error){ toast('❌ ما قدرنا ننشر السؤال: ' + error.message); console.warn(error.message); return; }
   toast('✅ تم إرسال سؤالك للجميع');
   document.getElementById('askText').value = '';
   closeSheet();
@@ -242,7 +242,7 @@ async function submitShoutout(){
     type:'qa', q:txt, a:null, anon:false, is_shoutout:true,
     asked_by: currentUser.id, asker_name: currentUser.name, asker_initials: currentUser.initials
   }]);
-  if(error){ toast('ما قدرنا ننشر الشوت أوت'); console.warn(error.message); return; }
+  if(error){ toast('❌ ما قدرنا ننشر الشوت أوت: ' + error.message); console.warn(error.message); return; }
   await sb.from('profiles').update({coins: currentUser.coins - 15}).eq('id', currentUser.id);
   currentUser.coins -= 15;
   toast('📢 تم نشر الشوت أوت');
@@ -258,7 +258,7 @@ async function submitQuote(){
     type:'quote', text:txt, topic:'الكل', anon:false,
     author_id: currentUser.id, author_name: currentUser.name, author_initials: currentUser.initials
   }]);
-  if(error){ toast('ما قدرنا ننشر الاقتباس'); console.warn(error.message); return; }
+  if(error){ toast('❌ ما قدرنا ننشر الاقتباس: ' + error.message); console.warn(error.message); return; }
   toast('❝ تم نشر اقتباسك للجميع');
   document.getElementById('quoteText').value = '';
   closeSheet();
@@ -268,7 +268,7 @@ async function submitConfession(){
   const txt = document.getElementById('confessionText').value.trim();
   if(!txt){ toast('اكتب اعترافك أولاً'); return; }
   const { error } = await sb.from('confessions').insert([{ text:txt }]);
-  if(error){ toast('ما قدرنا ننشر الاعتراف'); console.warn(error.message); return; }
+  if(error){ toast('❌ ما قدرنا ننشر الاعتراف: ' + error.message); console.warn(error.message); return; }
   toast('🎭 تم نشر اعترافك بدون أي أثر لهويتك');
   document.getElementById('confessionText').value = '';
   closeSheet();
@@ -281,7 +281,7 @@ async function submitAnswer(){
     .update({ a:txt, answered_by: currentUser.id })
     .eq('id', activeQuestion.id)
     .is('a', null); // ينجح بس لو السؤال لسا بدون إجابة — يمنع تعارض لو اثنين جاوبوا بنفس اللحظة
-  if(error){ toast('صار خلل، حاول مرة ثانية'); console.warn(error.message); return; }
+  if(error){ toast('❌ صار خلل: ' + error.message); console.warn(error.message); return; }
   await sb.from('profiles').update({coins: currentUser.coins + 3}).eq('id', currentUser.id);
   currentUser.coins += 3;
   pushNotification(activeQuestion.asked_by, `${currentUser.name} جاوب على سؤالك`);
