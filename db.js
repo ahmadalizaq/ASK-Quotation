@@ -1,0 +1,314 @@
+// ================= الحالة العامة (state) =================
+let currentUser = null;      // { id, name, initials, coins, vip }
+let currentTab = 'profile';
+let publicPosts = [];        // منشورات من نوع 'quote' و 'qa'
+let confessions = [];
+let notifications = [];
+let myLikedPostIds = new Set();
+let myLikedConfessionIds = new Set();
+let followingIds = new Set();
+let peopleDirectory = [];    // حسابات حقيقية من قاعدة البيانات
+
+const topics = [
+  {name:'الكل', emoji:'✨'},
+  {name:'حكمة', emoji:'🧠'},
+  {name:'حب', emoji:'❤️'},
+  {name:'نجاح', emoji:'🚀'},
+  {name:'صداقة', emoji:'🤝'},
+  {name:'تحفيز', emoji:'🔥'},
+];
+let exploreTopic = 'الكل';
+let exploreSearchTerm = '';
+let composerMode = 'ask';
+let activeQuestion = null;
+let authMode = 'login';
+let notifPanelOpen = false;
+
+// ================= AUTH (تسجيل الدخول / إنشاء حساب) =================
+function toggleAuthMode(){
+  authMode = authMode === 'login' ? 'signup' : 'login';
+  document.getElementById('authTitle').textContent = authMode==='login' ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
+  document.getElementById('authSub').textContent = authMode==='login' ? 'أدخل بياناتك للمتابعة' : 'خلك أنت — بحساب حقيقي من الصفر';
+  document.getElementById('nameField').style.display = authMode==='signup' ? 'block' : 'none';
+  document.getElementById('authSubmitBtn').textContent = authMode==='login' ? 'دخول' : 'إنشاء الحساب';
+  document.getElementById('authSwitchLine').innerHTML = authMode==='login'
+    ? 'ماعندك حساب؟ <a onclick="toggleAuthMode()">أنشئ حساب جديد</a>'
+    : 'عندك حساب؟ <a onclick="toggleAuthMode()">سجّل دخولك</a>';
+  document.getElementById('authError').classList.remove('show');
+}
+
+function showAuthError(msg){
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+async function submitAuth(){
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const name = document.getElementById('authName').value.trim();
+  const btn = document.getElementById('authSubmitBtn');
+
+  if(!email || !password){ showAuthError('عبّي البريد وكلمة المرور'); return; }
+  if(authMode==='signup' && !name){ showAuthError('اكتب اسمك'); return; }
+  if(password.length < 6){ showAuthError('كلمة المرور لازم 6 أحرف على الأقل'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  if(authMode === 'signup'){
+    const { data, error } = await sb.auth.signUp({ email, password });
+    if(error){ showAuthError(error.message); btn.disabled=false; btn.textContent='إنشاء الحساب'; return; }
+    if(data.user){
+      const initials = name.trim()[0] || 'A';
+      const { error: profileErr } = await sb.from('profiles').insert([{
+        id: data.user.id, name, initials, coins: 50, vip: false
+      }]);
+      if(profileErr) console.warn('profile create warning:', profileErr.message);
+    }
+    if(!data.session){
+      toast('تم إنشاء الحساب! تحقق من بريدك لتأكيد الحساب ثم سجّل دخولك.');
+      toggleAuthMode();
+      btn.disabled = false; btn.textContent = 'دخول';
+      return;
+    }
+  } else {
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if(error){ showAuthError(error.message); btn.disabled=false; btn.textContent='دخول'; return; }
+  }
+  // onAuthStateChange بتتكفل تفتح التطبيق بمجرد ما تصير الجلسة جاهزة
+}
+
+async function logout(){
+  await sb.auth.signOut();
+  currentUser = null;
+  document.getElementById('appMobile').style.display = 'none';
+  document.getElementById('appDesktop').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+}
+
+async function loadProfile(userId){
+  const { data, error } = await sb.from('profiles').select('*').eq('id', userId).single();
+  if(error || !data){ console.warn('profile load error:', error && error.message); return null; }
+  return data;
+}
+
+async function bootApp(session){
+  const profile = await loadProfile(session.user.id);
+  if(!profile){
+    // صف الحساب مفقود (حالة نادرة) — نسجل خروجه بدل ما نعرض تطبيق مكسور
+    showAuthError('صار خلل بجلب حسابك، حاول تسجل الدخول مرة ثانية.');
+    await sb.auth.signOut();
+    return;
+  }
+  currentUser = profile;
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appMobile').style.display = 'flex';
+  document.getElementById('appDesktop').style.display = 'flex';
+
+  await Promise.all([loadPosts(), loadConfessions(), loadMyLikes(), loadNotifications(), loadPeople(), loadFollowing()]);
+  render();
+  subscribeRealtime();
+}
+
+// ================= تحميل البيانات =================
+async function loadPosts(){
+  const { data, error } = await sb.from('posts').select('*').order('created_at', { ascending:false }).limit(100);
+  if(error){ console.warn('posts load error:', error.message); return; }
+  publicPosts = data || [];
+  render();
+}
+async function loadConfessions(){
+  const { data, error } = await sb.from('confessions').select('*').order('created_at', { ascending:false }).limit(100);
+  if(error){ console.warn('confessions load error:', error.message); return; }
+  confessions = data || [];
+  render();
+}
+async function loadMyLikes(){
+  if(!currentUser) return;
+  const { data } = await sb.from('likes').select('post_id').eq('user_id', currentUser.id);
+  myLikedPostIds = new Set((data||[]).map(r=>r.post_id));
+  const { data: cData } = await sb.from('confession_likes').select('confession_id').eq('user_id', currentUser.id);
+  myLikedConfessionIds = new Set((cData||[]).map(r=>r.confession_id));
+}
+async function loadNotifications(){
+  if(!currentUser) return;
+  const { data, error } = await sb.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending:false }).limit(30);
+  if(error){ console.warn('notifications load error:', error.message); return; }
+  notifications = data || [];
+  renderNotifBadge();
+}
+async function loadPeople(){
+  if(!currentUser) return;
+  const { data, error } = await sb.from('profiles').select('id,name,initials,vip').neq('id', currentUser.id).limit(20);
+  if(error){ console.warn('people load error:', error.message); return; }
+  peopleDirectory = data || [];
+}
+async function loadFollowing(){
+  if(!currentUser) return;
+  const { data } = await sb.from('follows').select('following_id').eq('follower_id', currentUser.id);
+  followingIds = new Set((data||[]).map(r=>r.following_id));
+}
+
+function subscribeRealtime(){
+  sb.channel('posts-changes').on('postgres_changes', { event:'*', schema:'public', table:'posts' }, () => loadPosts()).subscribe();
+  sb.channel('confessions-changes').on('postgres_changes', { event:'*', schema:'public', table:'confessions' }, () => loadConfessions()).subscribe();
+  sb.channel('notif-changes').on('postgres_changes', { event:'*', schema:'public', table:'notifications', filter:`user_id=eq.${currentUser.id}` }, () => loadNotifications()).subscribe();
+}
+
+async function pushNotification(userId, text){
+  if(!userId || userId === currentUser.id) return; // ما ننبّه المستخدم عن فعله هو نفسه
+  await sb.from('notifications').insert([{ user_id:userId, text, read:false }]);
+}
+
+// ================= التفاعلات (لايك / متابعة / VIP) =================
+async function toggleLike(postId){
+  const item = publicPosts.find(p=>p.id===postId);
+  if(!item) return;
+  const alreadyLiked = myLikedPostIds.has(postId);
+  if(alreadyLiked){
+    myLikedPostIds.delete(postId);
+    item.likes = Math.max(0, item.likes-1);
+    sb.from('likes').delete().eq('user_id', currentUser.id).eq('post_id', postId).then(()=>{});
+  } else {
+    myLikedPostIds.add(postId);
+    item.likes += 1;
+    sb.from('likes').insert([{user_id:currentUser.id, post_id:postId}]).then(()=>{});
+    const owner = item.type === 'quote' ? item.author_id : (item.answered_by || item.asked_by);
+    pushNotification(owner, `${currentUser.name} أعجب بمنشورك`);
+  }
+  sb.rpc('increment_post_likes', { pid: postId, delta: alreadyLiked ? -1 : 1 }).then(()=>{});
+  render();
+}
+async function toggleConfessionLike(confId){
+  const item = confessions.find(c=>c.id===confId);
+  if(!item) return;
+  const alreadyLiked = myLikedConfessionIds.has(confId);
+  if(alreadyLiked){
+    myLikedConfessionIds.delete(confId);
+    item.likes = Math.max(0, item.likes-1);
+    sb.from('confession_likes').delete().eq('user_id', currentUser.id).eq('confession_id', confId).then(()=>{});
+  } else {
+    myLikedConfessionIds.add(confId);
+    item.likes += 1;
+    sb.from('confession_likes').insert([{user_id:currentUser.id, confession_id:confId}]).then(()=>{});
+  }
+  sb.rpc('increment_confession_likes', { cid: confId, delta: alreadyLiked ? -1 : 1 }).then(()=>{});
+  render();
+}
+async function toggleFollow(targetId){
+  if(followingIds.has(targetId)){
+    followingIds.delete(targetId);
+    await sb.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', targetId);
+    toast('تم إلغاء المتابعة');
+  } else {
+    followingIds.add(targetId);
+    await sb.from('follows').insert([{follower_id:currentUser.id, following_id:targetId}]);
+    toast('تمت المتابعة ✅');
+    pushNotification(targetId, `${currentUser.name} بدأ يتابعك`);
+  }
+  render();
+}
+async function upgradeVip(){
+  const { error } = await sb.from('profiles').update({vip:true}).eq('id', currentUser.id);
+  if(error){ toast('صار خلل، حاول مرة ثانية'); return; }
+  currentUser.vip = true;
+  toast('🎉 مبروك! تم تفعيل VIP');
+  render();
+}
+
+// ================= إنشاء المحتوى (composer) =================
+async function submitAsk(){
+  const txt = document.getElementById('askText').value.trim();
+  if(!txt){ toast('اكتب سؤالاً أولاً'); return; }
+  const anon = document.getElementById('anonToggle').classList.contains('on');
+  const { error } = await sb.from('posts').insert([{
+    type:'qa', q:txt, a:null, anon,
+    asked_by: currentUser.id,
+    asker_name: anon ? null : currentUser.name,
+    asker_initials: anon ? null : currentUser.initials
+  }]);
+  if(error){ toast('ما قدرنا ننشر السؤال'); console.warn(error.message); return; }
+  toast('✅ تم إرسال سؤالك للجميع');
+  document.getElementById('askText').value = '';
+  closeSheet();
+  loadPosts();
+}
+async function submitShoutout(){
+  const txt = document.getElementById('shoutText').value.trim();
+  if(!txt){ toast('اكتب نص الشوت أوت أولاً'); return; }
+  if(currentUser.coins < 15){ toast('رصيدك من ASKcoins غير كافٍ'); return; }
+  const { error } = await sb.from('posts').insert([{
+    type:'qa', q:txt, a:null, anon:false, is_shoutout:true,
+    asked_by: currentUser.id, asker_name: currentUser.name, asker_initials: currentUser.initials
+  }]);
+  if(error){ toast('ما قدرنا ننشر الشوت أوت'); console.warn(error.message); return; }
+  await sb.from('profiles').update({coins: currentUser.coins - 15}).eq('id', currentUser.id);
+  currentUser.coins -= 15;
+  toast('📢 تم نشر الشوت أوت');
+  document.getElementById('shoutText').value = '';
+  closeSheet();
+  loadPosts();
+  render();
+}
+async function submitQuote(){
+  const txt = document.getElementById('quoteText').value.trim();
+  if(!txt){ toast('اكتب الاقتباس أولاً'); return; }
+  const { error } = await sb.from('posts').insert([{
+    type:'quote', text:txt, topic:'الكل', anon:false,
+    author_id: currentUser.id, author_name: currentUser.name, author_initials: currentUser.initials
+  }]);
+  if(error){ toast('ما قدرنا ننشر الاقتباس'); console.warn(error.message); return; }
+  toast('❝ تم نشر اقتباسك للجميع');
+  document.getElementById('quoteText').value = '';
+  closeSheet();
+  loadPosts();
+}
+async function submitConfession(){
+  const txt = document.getElementById('confessionText').value.trim();
+  if(!txt){ toast('اكتب اعترافك أولاً'); return; }
+  const { error } = await sb.from('confessions').insert([{ text:txt }]);
+  if(error){ toast('ما قدرنا ننشر الاعتراف'); console.warn(error.message); return; }
+  toast('🎭 تم نشر اعترافك بدون أي أثر لهويتك');
+  document.getElementById('confessionText').value = '';
+  closeSheet();
+  loadConfessions();
+}
+async function submitAnswer(){
+  const txt = document.getElementById('answerText').value.trim();
+  if(!txt || !activeQuestion){ toast('اكتب إجابة أولاً'); return; }
+  const { error } = await sb.from('posts')
+    .update({ a:txt, answered_by: currentUser.id })
+    .eq('id', activeQuestion.id)
+    .is('a', null); // ينجح بس لو السؤال لسا بدون إجابة — يمنع تعارض لو اثنين جاوبوا بنفس اللحظة
+  if(error){ toast('صار خلل، حاول مرة ثانية'); console.warn(error.message); return; }
+  await sb.from('profiles').update({coins: currentUser.coins + 3}).eq('id', currentUser.id);
+  currentUser.coins += 3;
+  pushNotification(activeQuestion.asked_by, `${currentUser.name} جاوب على سؤالك`);
+  toast('✅ تم نشر إجابتك للجميع');
+  closeSheet();
+  loadPosts();
+  render();
+}
+
+// ================= تشغيل التطبيق =================
+async function initApp(){
+  if(!supabaseReady){
+    document.getElementById('setupNotice').style.display = 'flex';
+    return;
+  }
+
+  sb.auth.onAuthStateChange((event, session) => {
+    if(session && !currentUser){ bootApp(session); }
+    if(!session){
+      currentUser = null;
+      document.getElementById('appMobile').style.display = 'none';
+      document.getElementById('appDesktop').style.display = 'none';
+      document.getElementById('authScreen').style.display = 'flex';
+    }
+  });
+
+  const { data: { session } } = await sb.auth.getSession();
+  if(session){ bootApp(session); }
+  else { document.getElementById('authScreen').style.display = 'flex'; }
+}

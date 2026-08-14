@@ -2,364 +2,61 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ASK & Quotation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --red:#E2242F;
-    --red-deep:#AE131C;
-    --red-soft: rgba(255,255,255,0.16);
-    --orange:#FB8B24;
-    --paper:#FFFFFF;
-    --paper-soft:#FFF3F2;
-    --ink:#2B1416;
-    --ink-muted:#B08585;
-    --on-red:#FFFFFF;
-    --on-red-muted: rgba(255,255,255,0.75);
-    --line-on-white: rgba(226,36,47,0.14);
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
-  body{margin:0; font-family:'Almarai',sans-serif; background:#12070a; display:flex; justify-content:center; align-items:flex-start; min-height:100vh; padding:24px 12px;}
-  .display{font-family:'El Messiri',sans-serif;}
-
-  .phone{
-    width:400px; max-width:100%; min-height:844px;
-    background: linear-gradient(165deg, #EA323C 0%, #D31E29 55%, #B9151F 100%);
-    color:var(--on-red);
-    border-radius:30px; overflow:hidden; position:relative;
-    box-shadow:0 20px 50px rgba(0,0,0,0.45);
-    display:flex; flex-direction:column;
-  }
-
-  /* ---- top bar ---- */
-  .topbar{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:20px 18px 6px 18px;
-  }
-  .logo{ display:flex; align-items:center; gap:8px; }
-  .logo-mark{
-    width:32px;height:32px;border-radius:9px;background:var(--orange);
-    display:flex;align-items:center;justify-content:center;
-    font-family:'El Messiri',sans-serif; font-weight:800; font-size:14px; color:white; letter-spacing:-1px;
-  }
-  .logo-text{font-family:'El Messiri',sans-serif; font-weight:700; font-size:16.5px; color:var(--on-red);}
-  .logo-text span{color:#FFE1B8;}
-  .icon-btn{
-    width:34px;height:34px;border-radius:50%; display:flex;align-items:center;justify-content:center;
-    background:var(--red-soft); border:none; cursor:pointer; font-size:14.5px; color:var(--on-red);
-  }
-  .icon-btn:active{ transform:scale(0.9); }
-
-  /* ---- content ---- */
-  .content{ flex:1; overflow-y:auto; padding:14px 18px 130px 18px; background:var(--paper); border-radius:26px 26px 0 0; margin-top:10px; }
-  .content::-webkit-scrollbar{width:0;}
-  .page-title{ font-family:'El Messiri',sans-serif; font-weight:700; font-size:18px; color:var(--ink); padding:18px 0 4px 0; }
-  .eyebrow{
-    font-size:11px; font-weight:800; color:var(--red); letter-spacing:0.3px; margin:20px 0 10px 0; display:flex; align-items:center; justify-content:space-between;
-  }
-  .eyebrow .more{ font-weight:600; color:var(--ink-muted); font-size:11px; cursor:pointer; }
-  .muted{ color:var(--ink-muted); }
-
-  /* ---- composer trigger (slim) ---- */
-  .composer-trigger{
-    background:var(--paper); border:1.5px solid var(--line-on-white); border-radius:14px;
-    padding:11px 15px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; margin-top:10px;
-  }
-  .composer-trigger span{ font-size:12.5px; color:var(--ink-muted); font-weight:700; }
-  .composer-plus{ width:24px;height:24px;border-radius:50%; background:var(--red); color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
-
-  /* ---- home: dense post-tile grid, avatar on top ---- */
-  .tile-grid{ display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-top:14px; padding-bottom:4px; }
-  .post-tile{
-    background:var(--paper); border:1.5px solid var(--line-on-white); border-radius:16px;
-    padding:28px 11px 11px 11px; position:relative; text-align:center;
-  }
-  .post-tile .type-ic{ position:absolute; top:9px; right:11px; font-size:11px; color:var(--line-on-white); }
-  .tile-avatar{
-    width:42px;height:42px;border-radius:50%; position:absolute; top:-13px; left:50%; transform:translateX(-50%);
-    display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:13.5px;
-    border:3px solid var(--paper); box-shadow:0 4px 10px rgba(174,19,28,0.22);
-    background:linear-gradient(135deg,var(--red),var(--orange));
-  }
-  .tile-avatar.anon{ background:#D8C7C6; color:#8A6A6A; }
-  .tile-name{ font-family:'El Messiri',sans-serif; font-size:11px; font-weight:700; color:var(--ink); margin-top:3px; }
-  .tile-content{ font-size:11.5px; line-height:1.55; color:var(--ink); margin:7px 0 9px 0;
-    display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
-  .tile-content.quote{ font-family:'El Messiri',sans-serif; font-weight:600; font-size:12px; }
-  .tile-foot{ display:flex; justify-content:center; gap:14px; font-size:10.5px; color:var(--ink-muted); border-top:1px solid var(--line-on-white); padding-top:7px; }
-  .tile-foot .t-like{ cursor:pointer; }
-  .tile-foot .t-like.liked{ color:var(--red); font-weight:700; }
-
-  /* ---- desktop sidebar widgets ---- */
-  .bento-tile{ background:var(--paper); border:1.5px solid var(--line-on-white); border-radius:15px; padding:13px; }
-  .bento-tile .label{ font-size:9.5px; font-weight:800; color:var(--red); margin-bottom:7px; display:block; }
-  .bento-tile .qt{ font-family:'El Messiri',sans-serif; font-weight:600; font-size:12px; line-height:1.5; color:var(--ink); }
-  .bento-leader .lrow{ display:flex; align-items:center; gap:7px; margin-bottom:8px; }
-  .bento-leader .lrow:last-child{ margin-bottom:0; }
-  .bento-leader .lrow b{ font-size:11px; color:var(--ink); font-family:'El Messiri',sans-serif; }
-
-  /* ---- explore: search + topics + people ---- */
-  .explore-search{
-    width:100%; background:var(--paper-soft); border:1.5px solid var(--line-on-white); border-radius:14px;
-    padding:12px 15px; font-family:'Almarai',sans-serif; font-size:13px; color:var(--ink); outline:none; margin-bottom:12px;
-  }
-  .explore-search:focus{ border-color:var(--red); }
-  .topic-row{ display:flex; gap:8px; overflow-x:auto; padding-bottom:10px; }
-  .topic-chip{
-    flex-shrink:0; padding:8px 14px; border-radius:20px; font-size:12px; font-weight:700; cursor:pointer;
-    border:1.5px solid var(--line-on-white); color:var(--ink-muted); white-space:nowrap;
-  }
-  .topic-chip.active{ background:var(--red); color:#fff; border-color:var(--red); }
-  .people-grid{ display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-top:12px; }
-  .people-card{ background:var(--paper); border:1.5px solid var(--line-on-white); border-radius:16px; padding:16px 10px; text-align:center; }
-  .people-card b{ display:block; font-family:'El Messiri',sans-serif; font-size:12px; color:var(--ink); margin-bottom:2px; }
-  .people-card span{ font-size:9.5px; color:var(--ink-muted); display:block; line-height:1.4; }
-  .d-main .people-grid{ grid-template-columns:repeat(4, 1fr); }
-
-  /* ---- confessions (anonymous) ---- */
-  .confession-card{
-    background:var(--paper); border:1.5px dashed var(--line-on-white); border-radius:16px; padding:14px; margin-bottom:12px;
-  }
-  .conf-head{ display:flex; align-items:center; gap:8px; margin-bottom:9px; }
-  .conf-ghost{
-    width:30px;height:30px;border-radius:50%; background:var(--paper-soft); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;
-  }
-  .conf-head b{ font-family:'El Messiri',sans-serif; font-size:12.5px; color:var(--ink); }
-  .conf-head span{ font-size:10px; color:var(--ink-muted); margin-inline-start:auto; }
-  .conf-text{ font-size:13px; line-height:1.75; color:var(--ink); }
-
-  /* ---- Q&A card (white) ---- */
-  .card{
-    background:var(--paper); border:1.5px solid var(--line-on-white); border-radius:18px;
-    padding:15px; margin-bottom:12px;
-  }
-  .card-head{ display:flex; align-items:center; gap:9px; margin-bottom:10px; }
-  .avatar{
-    width:36px;height:36px;border-radius:11px; background:linear-gradient(135deg,var(--red),var(--orange)); flex-shrink:0;
-    display:flex;align-items:center;justify-content:center; font-family:'El Messiri',sans-serif; font-weight:800; color:#fff; font-size:13px;
-  }
-  .avatar.anon{ background:#D8C7C6; color:#8A6A6A; }
-  .name-line{ display:flex; flex-direction:column; }
-  .name-line b{ font-family:'El Messiri',sans-serif; font-size:13px; font-weight:700; color:var(--ink); display:flex; align-items:center; gap:5px;}
-  .name-line small{ font-size:10.5px; color:var(--ink-muted); }
-  .vip-badge{
-    background:var(--paper-soft); color:var(--red); font-size:9px; padding:2px 6px; border-radius:6px; font-family:'El Messiri',sans-serif; font-weight:800; border:1px solid var(--line-on-white);
-  }
-  .q-bubble{
-    background:var(--paper-soft); border-right:3px solid var(--red); border-radius:4px 12px 12px 4px;
-    padding:9px 12px; font-size:13px; line-height:1.6; margin-bottom:9px; color:var(--ink);
-  }
-  .a-text{ font-size:13.5px; line-height:1.75; margin-bottom:9px; color:var(--ink); }
-  .card-foot{ display:flex; align-items:center; gap:16px; margin-top:6px; }
-  .foot-btn{ display:flex; align-items:center; gap:5px; font-size:12px; color:var(--ink-muted); cursor:pointer; user-select:none; }
-  .foot-btn.liked{ color:var(--red); font-weight:700; }
-  .foot-btn:active{ transform:scale(0.94); }
-
-  /* ---- quote card (white, red accent — signature element) ---- */
-  .quote-card{
-    border-radius:16px; padding:18px 16px 14px 16px; position:relative; overflow:hidden;
-    background:var(--paper); border:1.5px solid var(--line-on-white); border-right:4px solid var(--red);
-    margin-bottom:12px;
-  }
-  .quote-card::before{
-    content:'"'; position:absolute; top:-20px; left:8px; font-family:'El Messiri',sans-serif; font-size:80px; font-weight:800;
-    color:var(--paper-soft); line-height:1; z-index:0;
-  }
-  .quote-card .qtext{
-    font-family:'El Messiri',sans-serif; font-weight:600; font-size:15.5px; line-height:1.65; position:relative; z-index:1; margin-bottom:13px; color:var(--ink);
-  }
-  .quote-card .qmeta{ display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; }
-  .quote-card .qauthor{ display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--ink-muted); font-weight:700; }
-  .quote-card .qstory{
-    background:var(--paper-soft); border:1px solid var(--line-on-white); color:var(--red);
-    padding:6px 10px; border-radius:10px; font-size:10.5px; font-weight:700; display:flex; align-items:center; gap:5px; cursor:pointer;
-  }
-  .quote-card .qstory:active{ transform:scale(0.95); }
-
-  /* ---- poll ---- */
-  .poll-opt{
-    border:1px solid var(--line-on-white); border-radius:10px; padding:8px 10px; font-size:12px; margin-bottom:6px;
-    position:relative; overflow:hidden; color:var(--ink);
-  }
-  .poll-fill{ position:absolute; inset:0; background:var(--paper-soft); z-index:0; }
-  .poll-opt span{ position:relative; z-index:1; display:flex; justify-content:space-between; }
-
-  /* ---- bottom nav (floating) ---- */
-  .nav-wrap{ position:absolute; bottom:16px; left:16px; right:16px; display:flex; align-items:center; gap:10px; z-index:20; }
-  .bottom-nav{
-    flex:1; height:62px; background:var(--paper); border-radius:22px;
-    display:flex; align-items:center; justify-content:space-around;
-    box-shadow:0 10px 26px rgba(0,0,0,0.28);
-  }
-  .nav-item{ display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; color:var(--ink-muted); padding:6px 10px; border-radius:14px; }
-  .nav-item.active{ color:var(--red); background:var(--paper-soft); }
-  .nav-item .ic{ font-size:17px; }
-  .nav-item .lb{ font-size:8.5px; font-weight:700; }
-  .nav-fab{
-    width:56px;height:56px; border-radius:18px; background:var(--red); display:flex;align-items:center;justify-content:center;
-    color:#fff; font-size:26px; box-shadow:0 10px 24px rgba(174,19,28,0.55); cursor:pointer; flex-shrink:0;
-  }
-  .nav-fab:active{ transform:scale(0.92); }
-
-  /* ---- sheet / modal (fixed to viewport so it works for mobile + desktop) ---- */
-  .overlay{
-    position:fixed; inset:0; background:rgba(20,4,6,0.55); z-index:140; opacity:0; pointer-events:none; transition:opacity .25s;
-  }
-  .overlay.show{ opacity:1; pointer-events:all; }
-  .sheet{
-    position:fixed; left:0; right:0; bottom:0; background:var(--paper); border-radius:26px 26px 0 0;
-    padding:10px 20px 26px 20px; z-index:141; transform:translateY(100%); transition:transform .3s cubic-bezier(.32,.72,0,1);
-    max-height:82vh; overflow-y:auto; color:var(--ink); max-width:420px; margin:0 auto;
-  }
-  .sheet.show{ transform:translateY(0); }
-  .sheet-handle{ width:36px; height:4px; border-radius:3px; background:var(--line-on-white); margin:6px auto 14px auto; }
-  .sheet-title{ font-family:'El Messiri',sans-serif; font-weight:700; font-size:16px; margin-bottom:14px; color:var(--ink); }
-
-  @media (min-width:980px){
-    .sheet{
-      left:50%; right:auto; bottom:auto; top:50%; border-radius:22px; width:440px;
-      transform:translate(-50%,-46%) scale(0.96); opacity:0; pointer-events:none; transition:transform .25s, opacity .25s;
-    }
-    .sheet.show{ transform:translate(-50%,-50%) scale(1); opacity:1; pointer-events:all; }
-    .sheet-handle{ display:none; }
-  }
-
-  .mode-row{ display:flex; gap:8px; margin-bottom:16px; }
-  .mode-opt{
-    flex:1; border:1.5px solid var(--line-on-white); border-radius:14px; padding:12px 6px; text-align:center; cursor:pointer;
-  }
-  .mode-opt .ic{ font-size:18px; display:block; margin-bottom:4px; }
-  .mode-opt .lb{ font-size:11px; font-weight:700; color:var(--ink-muted); }
-  .mode-opt.active{ border-color:var(--red); background:var(--paper-soft); }
-  .mode-opt.active .lb{ color:var(--red); }
-
-  .tab-switch{ display:flex; gap:8px; margin-bottom:14px; }
-  .tab-switch div{ flex:1; text-align:center; padding:9px 0; border-radius:12px; font-size:12px; font-weight:700; cursor:pointer; color:var(--ink-muted); border:1.5px solid var(--line-on-white); }
-  .tab-switch div.active{ background:var(--red); color:#fff; border-color:var(--red); }
-
-  textarea, input[type=text]{
-    width:100%; background:var(--paper-soft); border:1.5px solid var(--line-on-white); border-radius:14px; color:var(--ink);
-    padding:12px 14px; font-family:'Almarai',sans-serif; font-size:13.5px; resize:none; outline:none;
-  }
-
-  .toggle-row{ display:flex; align-items:center; justify-content:space-between; padding:11px 2px; font-size:13px; color:var(--ink); }
-  .toggle{ width:42px; height:24px; border-radius:20px; background:var(--line-on-white); position:relative; cursor:pointer; flex-shrink:0; }
-  .toggle.on{ background:var(--red); }
-  .toggle-dot{ width:18px;height:18px;border-radius:50%; background:#fff; position:absolute; top:3px; right:3px; transition:.2s; }
-  .toggle.on .toggle-dot{ right:21px; }
-
-  .btn-primary{
-    background:var(--red); color:#fff; border:none; border-radius:14px; padding:13px; width:100%;
-    font-family:'El Messiri',sans-serif; font-weight:700; font-size:14px; cursor:pointer; margin-top:6px;
-  }
-  .btn-primary:active{ transform:scale(0.98); }
-  .btn-ghost{
-    background:transparent; border:1.5px solid var(--line-on-white); color:var(--ink); border-radius:14px; padding:11px;
-    width:100%; font-family:'El Messiri',sans-serif; font-weight:700; font-size:12.5px; cursor:pointer; margin-top:8px;
-  }
-
-  .poll-builder-row{ display:flex; gap:8px; margin-bottom:8px; }
-  .poll-builder-row input{ flex:1; }
-
-  .empty-state{ text-align:center; padding:50px 20px; color:var(--ink-muted); }
-  .empty-state .big{ font-size:32px; margin-bottom:10px; color:var(--red); }
-
-  .inbox-item{ display:flex; align-items:center; gap:11px; padding:12px 4px; border-bottom:1px solid var(--line-on-white); cursor:pointer; }
-  .inbox-item:last-child{ border-bottom:none; }
-  .inbox-item:active{ opacity:0.7; }
-  .dot{ width:7px;height:7px;border-radius:50%; background:var(--red); flex-shrink:0; }
-
-  /* ---- profile: cover pattern ---- */
-  .profile-cover{ height:70px; background:linear-gradient(120deg,var(--red),var(--red-deep)); border-radius:0; margin:-6px -18px 0 -18px; }
-  .profile-header{ text-align:center; padding:0 0 6px 0; margin-top:-34px; }
-  .profile-avatar{
-    width:74px;height:74px;border-radius:22px; background:linear-gradient(135deg,var(--red),var(--orange)); margin:0 auto 8px auto;
-    display:flex;align-items:center;justify-content:center; font-family:'El Messiri',sans-serif; font-weight:800; font-size:26px; color:#fff;
-    border:4px solid var(--paper); box-shadow:0 6px 16px rgba(0,0,0,0.12);
-  }
-  .profile-name{ font-family:'El Messiri',sans-serif; font-weight:700; font-size:16.5px; display:flex; align-items:center; justify-content:center; gap:6px; color:var(--ink); }
-  .stat-card{ display:flex; justify-content:space-around; background:var(--paper-soft); border-radius:16px; padding:12px 0; margin:14px 0 4px 0; }
-  .stat-card div{ text-align:center; }
-  .stat-card b{ font-family:'El Messiri',sans-serif; font-size:15px; display:block; color:var(--ink); }
-  .stat-card span{ font-size:10.5px; color:var(--ink-muted); }
-
-  .toast{
-    position:fixed; bottom:34px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--paper); color:var(--ink);
-    padding:10px 16px; border-radius:14px; font-size:12px; font-weight:700; z-index:160; opacity:0; pointer-events:none;
-    transition:.3s; border-right:3px solid var(--red); box-shadow:0 10px 24px rgba(0,0,0,0.25); display:flex; align-items:center; gap:6px;
-  }
-  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
-
-  .hint{ font-size:10.5px; color:var(--ink-muted); text-align:center; margin-top:18px; padding:0 10px; line-height:1.7; }
-
-  /* ================= DESKTOP SHELL ================= */
-  .desktop-shell{ display:none; }
-  @media (min-width:980px){
-    body{ align-items:center; padding:28px; }
-    .phone{ display:none; }
-    .desktop-shell{
-      display:flex; flex-direction:column; width:100%; max-width:1180px; min-height:800px;
-      background:linear-gradient(165deg, #EA323C 0%, #D31E29 55%, #B9151F 100%);
-      border-radius:28px; overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,0.45); color:var(--on-red);
-    }
-  }
-  .d-header{ display:flex; align-items:center; gap:22px; padding:20px 30px; flex-shrink:0; }
-  .d-header .logo{ flex-shrink:0; }
-  .d-search{ flex:1; max-width:420px; }
-  .d-search input{
-    width:100%; background:var(--red-soft); border:1px solid rgba(255,255,255,0.18); border-radius:12px;
-    padding:10px 14px; color:#fff; font-family:'Almarai',sans-serif; font-size:12.5px; outline:none;
-  }
-  .d-search input::placeholder{ color:var(--on-red-muted); }
-  .d-header-actions{ display:flex; align-items:center; gap:10px; margin-inline-start:auto; }
-  .d-coin-chip{
-    display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.18);
-    padding:7px 13px; border-radius:20px; font-size:12px; font-weight:700; font-family:'El Messiri',sans-serif;
-  }
-
-  .d-body{ flex:1; display:grid; grid-template-columns:230px 1fr 280px; background:var(--paper); border-radius:24px 24px 0 0; overflow:hidden; }
-
-  .d-sidebar-left{ padding:24px 16px; display:flex; flex-direction:column; gap:5px; border-inline-start:1px solid var(--line-on-white); }
-  .d-nav-item{
-    display:flex; align-items:center; gap:10px; padding:11px 13px; border-radius:12px; cursor:pointer;
-    font-size:13px; font-weight:700; color:var(--ink-muted);
-  }
-  .d-nav-item .ic{ font-size:16px; }
-  .d-nav-item.active{ background:var(--paper-soft); color:var(--red); }
-  .d-sidebar-left .btn-primary{ margin:10px 2px 18px 2px; }
-  .d-side-widget{ margin-top:auto; background:var(--paper-soft); border-radius:14px; padding:14px; text-align:center; }
-  .d-side-widget b{ display:block; font-family:'El Messiri',sans-serif; font-size:16px; color:var(--ink); }
-  .d-side-widget span{ font-size:10.5px; color:var(--ink-muted); }
-
-  .d-main{ padding:22px 26px 60px 26px; overflow-y:auto; border-inline-start:1px solid var(--line-on-white); max-height:calc(800px - 90px); }
-  .d-main .tile-grid{ grid-template-columns:repeat(3, 1fr); }
-
-  .d-sidebar-right{ padding:24px 18px; overflow-y:auto; }
-  .d-sidebar-right .bento-tile{ margin-bottom:12px; }
-  .d-suggest-row{ display:flex; align-items:center; gap:9px; margin-bottom:12px; }
-  .d-suggest-row:last-child{ margin-bottom:0; }
-  .d-suggest-row b{ font-size:11.5px; color:var(--ink); font-family:'El Messiri',sans-serif; display:block; }
-  .d-suggest-row span{ font-size:9.5px; color:var(--ink-muted); }
-  .d-follow-btn{
-    margin-inline-start:auto; background:var(--red); color:#fff; border:none; border-radius:10px; padding:5px 12px;
-    font-size:10.5px; font-weight:700; font-family:'El Messiri',sans-serif; cursor:pointer; flex-shrink:0;
-  }
-</style>
-<!-- Supabase (free tier) — used for real-time shared data. App works fine without it (local demo mode) until configured below. -->
+<link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<div class="phone" id="phone">
+<div id="setupNotice" style="display:none;">
+  <div class="box">
+    <h2>الموقع يحتاج إعداد أول مرة</h2>
+    <p style="font-size:13px; line-height:1.8;">لازم تربط قاعدة بيانات Supabase قبل ما يشتغل الموقع فعلياً (حسابات، أسئلة، اقتباسات، اعترافات — كلها حقيقية ومحتاجة قاعدة بيانات). افتح ملف <code>SETUP.md</code> المرفق واتبع الخطوات، بعدين رجّع افتح الصفحة.</p>
+  </div>
+</div>
+
+<div id="authScreen" style="display:none;">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-mark" style="background:var(--orange);">A؟</div>
+      <div class="logo-text" style="color:var(--ink);">ASK <span style="color:var(--red);">&Q</span></div>
+    </div>
+    <div class="auth-title" id="authTitle">تسجيل الدخول</div>
+    <div class="auth-sub" id="authSub">أدخل بياناتك للمتابعة</div>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-field" id="nameField" style="display:none;">
+      <label>اسمك</label>
+      <input type="text" id="authName" placeholder="مثال: سارة العتيبي">
+    </div>
+    <div class="auth-field">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="authEmail" placeholder="you@example.com">
+    </div>
+    <div class="auth-field">
+      <label>كلمة المرور</label>
+      <input type="password" id="authPassword" placeholder="6 أحرف على الأقل">
+    </div>
+    <button class="btn-primary" id="authSubmitBtn" onclick="submitAuth()">دخول</button>
+    <div class="auth-switch" id="authSwitchLine">
+      ماعندك حساب؟ <a onclick="toggleAuthMode()">أنشئ حساب جديد</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MOBILE APP ===================== -->
+<div class="app-mobile" id="appMobile" style="display:none;">
 
   <div class="topbar">
     <div class="logo">
       <div class="logo-mark">A؟</div>
       <div class="logo-text">ASK <span>&Q</span></div>
     </div>
-    <div class="icon-btn" onclick="toast('لا توجد إشعارات جديدة')">🔔</div>
+    <div class="top-actions">
+      <div class="icon-btn" onclick="toggleNotifPanel()">🔔<span class="badge-dot" id="notifBadgeM" style="display:none;">0</span></div>
+    </div>
   </div>
 
   <div class="content" id="content"></div>
@@ -375,20 +72,19 @@
   </div>
 </div>
 
-<!-- ===================== DESKTOP SHELL ===================== -->
-<div class="desktop-shell" id="desktopShell">
-
+<!-- ===================== DESKTOP APP ===================== -->
+<div class="app-desktop" id="appDesktop">
   <div class="d-header">
     <div class="logo">
       <div class="logo-mark">A؟</div>
       <div class="logo-text">ASK <span>&Q</span></div>
     </div>
     <div class="d-search">
-      <input type="text" placeholder="ابحث عن أشخاص أو اقتباسات...">
+      <input type="text" id="dHeaderSearch" placeholder="ابحث عن اقتباس... واضغط Enter" onkeydown="if(event.key==='Enter') headerSearch(this.value)">
     </div>
     <div class="d-header-actions">
-      <div class="d-coin-chip">🪙 <span id="dCoinCount">240</span></div>
-      <div class="icon-btn" onclick="toast('لا توجد إشعارات جديدة')">🔔</div>
+      <div class="d-coin-chip">🪙 <span id="dCoinCount">0</span></div>
+      <div class="icon-btn" onclick="toggleNotifPanel()">🔔<span class="badge-dot" id="notifBadgeD" style="display:none;">0</span></div>
       <div class="icon-btn" onclick="switchTab('profile')">👤</div>
     </div>
   </div>
@@ -401,18 +97,17 @@
       <div class="d-nav-item nav-item" data-tab="quotes" onclick="switchTab('quotes')"><span class="ic">❝</span> الاقتباسات</div>
       <div class="d-nav-item nav-item" data-tab="confessions" onclick="switchTab('confessions')"><span class="ic">🎭</span> الاعترافات</div>
       <div class="d-side-widget">
-        <b id="dCoinWidget">240 🪙</b>
+        <b id="dCoinWidget">0 🪙</b>
         <span>رصيد ASKcoins</span>
       </div>
     </aside>
-
     <main class="d-main" id="desktopContent"></main>
-
     <aside class="d-sidebar-right" id="desktopSidebarRight"></aside>
   </div>
 </div>
 
-<!-- ===================== SHARED MODALS (mobile + desktop) ===================== -->
+<div class="notif-panel" id="notifPanel"></div>
+
 <div class="overlay" id="overlay" onclick="closeSheet()"></div>
 
 <!-- composer sheet -->
@@ -427,26 +122,18 @@
   </div>
 
   <div id="composerAskBody">
-    <textarea id="askText" rows="3" placeholder="اكتب سؤالك هنا..."></textarea>
+    <textarea id="askText" rows="3" placeholder="اكتب سؤالك هنا... بينشر للجميع، وأي شخص يقدر يجاوب عليه"></textarea>
     <div class="toggle-row">
-      <span>سؤال مجهول</span>
+      <span>سؤال مجهول (ما يظهر اسمك)</span>
       <div class="toggle on" id="anonToggle" onclick="this.classList.toggle('on')"><div class="toggle-dot"></div></div>
-    </div>
-    <div class="toggle-row">
-      <span>إرفاق استطلاع رأي</span>
-      <div class="toggle" id="pollToggle" onclick="togglePollBuilder()"><div class="toggle-dot"></div></div>
-    </div>
-    <div id="pollBuilder" style="display:none;">
-      <div class="poll-builder-row"><input type="text" placeholder="الخيار الأول" class="pollOptInput"></div>
-      <div class="poll-builder-row"><input type="text" placeholder="الخيار الثاني" class="pollOptInput"></div>
     </div>
     <button class="btn-primary" onclick="submitAsk()">إرسال السؤال</button>
   </div>
 
   <div id="composerShoutBody" style="display:none;">
-    <textarea id="shoutText" rows="3" placeholder="اكتب سؤال الشوت أوت لجميع المستخدمين القريبين منك..."></textarea>
-    <div class="toggle-row"><span>نطاق الإرسال</span><b style="font-size:12px;color:var(--red)">📍 نفس المدينة</b></div>
-    <button class="btn-primary" onclick="submitShoutout()">إرسال للجميع (يكلف 15 🪙)</button>
+    <textarea id="shoutText" rows="3" placeholder="اكتب سؤال الشوت أوت..."></textarea>
+    <div class="toggle-row"><span>يكلف</span><b style="font-size:12px;color:var(--red)">15 🪙</b></div>
+    <button class="btn-primary" onclick="submitShoutout()">نشر الشوت أوت</button>
   </div>
 
   <div id="composerQuoteBody" style="display:none;">
@@ -466,572 +153,15 @@
   <div class="sheet-handle"></div>
   <div class="sheet-title">الإجابة على السؤال</div>
   <div class="q-bubble" id="answerQuestionPreview"></div>
-  <div class="tab-switch">
-    <div class="active" data-mode="text" onclick="setAnswerMode('text')">إجابة نصية</div>
-    <div data-mode="quote" onclick="setAnswerMode('quote')">تحويل لاقتباس ❝</div>
-  </div>
   <textarea id="answerText" rows="4" placeholder="اكتب إجابتك..."></textarea>
   <button class="btn-primary" onclick="submitAnswer()">نشر الإجابة</button>
-  <button class="btn-ghost" onclick="rejectQuestion()">حذف السؤال بدون رد</button>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script>
-// ---------------- state ----------------
-let currentTab = 'profile';
-let coins = 240;
-let isVip = false;
-
-const me = { name:'أنت', initials:'أ', vip:false };
-
-let inbox = [
-  { id:1, anon:true, text:'وش أكثر شي يخليك تحس بالراحة النفسية بعد يوم متعب؟', poll:null },
-  { id:2, anon:false, from:'سارة العتيبي', text:'متى بتنزل تحديث جديد للحساب؟ 👀', poll:null },
-  { id:3, anon:true, text:'إذا خيروك بين السفر لمرة وحدة بس تحدد وجهتك بنفسك، وين بتروح؟', poll:{options:[{t:'آسيا',v:34},{t:'أوروبا',v:52},{t:'داخلياً',v:14}]} },
-];
-
-let confessions = [
-  { text:'أحياناً أضحك مع الناس على نكتة ما فهمتها بس عشان ما أبين إني ما فهمت.', likes:412, comments:38, time:'قبل ساعة', liked:false },
-  { text:'ندمت إني تركت شغلي القديم، بس ما أقدر أرجع أعترف بهذا لحد.', likes:267, comments:41, time:'قبل 3 ساعات', liked:false },
-  { text:'كل ما أشوف أحد ناجح بعمري أحس إني متأخر، مع إني أعرف إنه تفكير غلط.', likes:530, comments:64, time:'قبل 5 ساعات', liked:false },
-  { text:'أحب شخص من زمان وما قلت له، وأخاف الفرصة تفوت.', likes:389, comments:52, time:'أمس', liked:false },
-];
-
-let publicPosts = [
-  { type:'quote', name:'مها الحربي', vip:false, initials:'م', text:'ثق بالتوقيت اللي مو فاهمه دحين، بعدين بيصير أوضح شي بحياتك.', likes:341, comments:28, time:'قبل 5 دقائق', saved:false, liked:false, topic:'تحفيز' },
-  { type:'answer', name:'فيصل الدوسري', vip:true, initials:'ف', anon:false, q:'وش رأيك بالناس اللي تستسلم بسرعة؟', a:'ما أحكم عليهم، بس أعرف إن أغلب اللي وصلوا كانوا قاب قوسين من الاستسلام قبل النجاح.', likes:203, comments:19, time:'قبل 20 دقيقة', liked:false },
-  { type:'quote', name:'عبير المالكي', vip:false, initials:'ع', text:'اللي يفهمك بسكوتك، ما يحتاج توضحله بكلامك.', likes:512, comments:47, time:'قبل ساعة', saved:false, liked:false, topic:'صداقة' },
-  { type:'quote', name:'يوسف القرني', vip:false, initials:'ي', text:'كل نسخة سابقة منك كانت تحاول توصلك لهنا.', likes:167, comments:12, time:'قبل ساعتين', saved:false, liked:false, topic:'حكمة' },
-  { type:'answer', name:'لمى العنزي', vip:false, initials:'ل', anon:true, q:'أكثر درس تعلمتيه من علاقة انتهت؟', a:'إن الحب وحده ما يكفي إذا ما فيه احترام واحد للثاني.', likes:298, comments:33, time:'قبل 3 ساعات', liked:false },
-  { type:'quote', name:'ريم القحطاني', vip:false, initials:'ر', text:'اللي يبنيك بصمت، يفرحك بصدق.', likes:76, comments:6, time:'قبل 4 ساعات', saved:false, liked:false, topic:'صداقة' },
-  { type:'quote', name:'نورة الشهري', vip:true, initials:'ن', text:'الصبر مو إنك تنتظر، الصبر إنك تستمر وأنت منتظر.', likes:128, comments:14, time:'قبل 5 ساعات', saved:false, liked:false, topic:'حكمة' },
-  { type:'answer', name:'خالد المطيري', vip:false, initials:'خ', anon:true, q:'وش أكثر ندم عندك؟', a:'إني ما بدأت أتعلم اللي أحبه من زمان بدل ما أنتظر الوقت المثالي.', likes:41, comments:5, time:'أمس', liked:false },
-  { type:'quote', name:'مجهول', vip:false, initials:'؟', text:'كل يوم تصحى فيه بدون ألم هو يوم ناجح.', likes:212, comments:22, time:'أمس', saved:false, liked:false, topic:'تحفيز' },
-  { type:'quote', name:'سارة الحارثي', vip:false, initials:'س', text:'الحب الحقيقي ما يحتاج إثبات، يحتاج استمرار.', likes:389, comments:31, time:'قبل يومين', saved:false, liked:false, topic:'حب' },
-  { type:'quote', name:'ماجد السبيعي', vip:false, initials:'م', text:'النجاح اللي ما تعبت فيه، غالباً بيكون حظ مؤقت.', likes:245, comments:18, time:'قبل يومين', saved:false, liked:false, topic:'نجاح' },
-];
-
-const topics = [
-  {name:'الكل', emoji:'✨'},
-  {name:'حكمة', emoji:'🧠'},
-  {name:'حب', emoji:'❤️'},
-  {name:'نجاح', emoji:'🚀'},
-  {name:'صداقة', emoji:'🤝'},
-  {name:'تحفيز', emoji:'🔥'},
-];
-const peopleDirectory = [
-  ['سلطان الغامدي','مهتم بالاقتباسات','س'],
-  ['هند الشمري','تجيب على الشوت أوت كثير','هـ'],
-  ['بندر العتيبي','عضو VIP نشيط','ب'],
-  ['أمل الزهراني','كاتبة اقتباسات يومية','أ'],
-];
-let exploreTopic = 'الكل';
-let exploreSearchTerm = '';
-
-let composerMode = 'ask';
-let answerMode = 'text';
-let activeQuestion = null;
-
-// ---------------- helpers ----------------
-function toast(msg){
-  const t = document.getElementById('toast');
-  t.innerHTML = msg;
-  t.classList.add('show');
-  setTimeout(()=> t.classList.remove('show'), 1800);
-}
-function addCoins(n){
-  coins += n;
-}
-
-// ---------------- render ----------------
-function render(){
-  let html = '';
-  if(currentTab === 'profile') html = renderProfile();
-  else if(currentTab === 'questions') html = renderQuestions();
-  else if(currentTab === 'quotes') html = renderQuotesPage();
-  else if(currentTab === 'confessions') html = renderConfessions();
-
-  document.getElementById('content').innerHTML = html;
-  document.getElementById('desktopContent').innerHTML = html;
-  document.getElementById('desktopSidebarRight').innerHTML = renderDesktopSidebar();
-
-  const dCoin = document.getElementById('dCoinCount');
-  const dWidget = document.getElementById('dCoinWidget');
-  if(dCoin) dCoin.textContent = coins;
-  if(dWidget) dWidget.textContent = coins + ' 🪙';
-}
-
-function renderDesktopSidebar(){
-  const spotlight = publicPosts.find(p=>p.type==='quote');
-  return `
-    <div class="bento-tile">
-      <span class="label">✨ اقتباس اليوم</span>
-      <div class="qt">${spotlight.text}</div>
-      <div class="muted" style="font-size:10px; margin-top:8px;">— ${spotlight.name}</div>
-    </div>
-    <div class="bento-tile">
-      <span class="label">🏆 المتصدرون</span>
-      <div class="bento-leader">
-        ${['نورة الشهري','ريم القحطاني','عبدالله الزهراني'].map(n=>`
-          <div class="lrow"><div class="avatar" style="width:24px;height:24px;font-size:10px;border-radius:8px;">${n[0]}</div><b>${n}</b></div>
-        `).join('')}
-      </div>
-    </div>
-    <div class="bento-tile">
-      <span class="label">👥 اقتراحات متابعة</span>
-      ${peopleDirectory.slice(0,3).map(p=>`
-        <div class="d-suggest-row">
-          <div class="avatar" style="width:28px;height:28px;font-size:11px;border-radius:9px;">${p[2]}</div>
-          <div><b>${p[0]}</b><span>${p[1]}</span></div>
-          <button class="d-follow-btn" onclick="toast('تمت المتابعة ✅')">متابعة</button>
-        </div>
-      `).join('')}
-    </div>
-  `;
-}
-
-function renderFeedCard(item, idx, src){
-  src = src || 'home';
-  const commentLabel = item.comments ? `💬 <span>${item.comments}</span>` : '💬 نقاش';
-  const commentLabelA = item.comments ? `💬 <span>${item.comments}</span>` : '💬 رد';
-  if(item.type === 'quote'){
-    return `
-      <div class="quote-card">
-        <div class="qtext">${item.text}</div>
-        <div class="qmeta">
-          <div class="qauthor">
-            <div class="avatar" style="width:20px;height:20px;font-size:9px;border-radius:6px;">${item.initials}</div>
-            <span>${item.name} ${item.vip ? '<span class=\"vip-badge\">VIP</span>' : ''}</span>
-          </div>
-          <div class="qstory" onclick="exportStory()">📤 قصة</div>
-        </div>
-      </div>
-      <div class="card-foot" style="margin:-6px 4px 6px 4px;">
-        <div class="foot-btn ${item.liked?'liked':''}" onclick="toggleLike('${src}',${idx})">♥ <span>${item.likes}</span></div>
-        <div class="foot-btn" onclick="toast('تم فتح سلسلة النقاش 💬')">${commentLabel}</div>
-        <div class="foot-btn" onclick="saveQuote('${src}',${idx})">${item.saved? '🔖 محفوظ' : '🔖 حفظ'}</div>
-      </div>
-      ${item.time ? `<div class="muted" style="font-size:10px; margin:-2px 4px 14px 4px;">${item.time}</div>` : `<div style="margin-bottom:14px;"></div>`}
-    `;
-  }
-  return `
-    <div class="card">
-      <div class="card-head">
-        <div class="avatar ${item.anon?'anon':''}">${item.anon ? '؟' : item.initials}</div>
-        <div class="name-line">
-          <b>${item.anon ? 'سؤال مجهول' : item.name} ${item.vip ? '<span class=\"vip-badge\">VIP</span>' : ''}</b>
-          <small>${item.time || 'منذ ساعتين'}</small>
-        </div>
-      </div>
-      <div class="q-bubble">${item.q}</div>
-      <div class="a-text">${item.a}</div>
-      <div class="card-foot">
-        <div class="foot-btn ${item.liked?'liked':''}" onclick="toggleLike('${src}',${idx})">♥ <span>${item.likes}</span></div>
-        <div class="foot-btn" onclick="toast('تم فتح سلسلة النقاش 💬')">${commentLabelA}</div>
-        <div class="foot-btn" onclick="exportStory()">📤 مشاركة</div>
-      </div>
-    </div>
-  `;
-}
-
-function renderTile(item, idx, src){
-  src = src || 'public';
-  if(item.type === 'quote'){
-    return `
-      <div class="post-tile">
-        <div class="type-ic">❝</div>
-        <div class="tile-avatar">${item.initials}</div>
-        <div class="tile-name">${item.name}${item.vip ? ' <span class=\"vip-badge\" style=\"font-size:7.5px;padding:1px 4px;\">VIP</span>' : ''}</div>
-        <div class="tile-content quote">${item.text}</div>
-        <div class="tile-foot">
-          <div class="t-like ${item.liked?'liked':''}" onclick="toggleLike('${src}',${idx})">♥ ${item.likes}</div>
-          <div>💬 ${item.comments||0}</div>
-        </div>
-      </div>
-    `;
-  }
-  return `
-    <div class="post-tile">
-      <div class="type-ic">؟</div>
-      <div class="tile-avatar ${item.anon?'anon':''}">${item.anon ? '؟' : item.initials}</div>
-      <div class="tile-name">${item.anon ? 'مجهول' : item.name}${item.vip ? ' <span class=\"vip-badge\" style=\"font-size:7.5px;padding:1px 4px;\">VIP</span>' : ''}</div>
-      <div class="tile-content">${item.a}</div>
-      <div class="tile-foot">
-        <div class="t-like ${item.liked?'liked':''}" onclick="toggleLike('${src}',${idx})">♥ ${item.likes}</div>
-        <div>💬 ${item.comments||0}</div>
-      </div>
-    </div>
-  `;
-}
-
-function renderQuestions(){
-  const qas = publicPosts.filter(p=>p.type==='answer');
-  return `
-    <div class="page-title">الأسئلة</div>
-    <div class="muted" style="font-size:12px; margin:-6px 0 14px 0;">أسئلة وأجوبة حقيقية ينشرها المجتمع</div>
-    <div class="composer-trigger" onclick="openComposerMode('ask')">
-      <span>عندك سؤال؟ اطرحه الحين...</span>
-      <div class="composer-plus">+</div>
-    </div>
-    <div style="margin-top:14px;">
-      ${qas.map(it=>{ const idx = publicPosts.indexOf(it); return renderFeedCard(it, idx, 'public'); }).join('')}
-    </div>
-  `;
-}
-
-function matchesExplore(item){
-  if(item.type !== 'quote') return false;
-  const topicOk = exploreTopic === 'الكل' || item.topic === exploreTopic;
-  const term = exploreSearchTerm.trim();
-  const searchOk = !term || item.text.includes(term) || item.name.includes(term);
-  return topicOk && searchOk;
-}
-
-function renderExploreResults(){
-  const results = publicPosts.filter(matchesExplore);
-  if(results.length === 0){
-    return `<div class="empty-state" style="padding:34px 10px;"><div class="big">🔍</div>ما فيه نتائج مطابقة<br>جرب كلمة أو موضوع ثاني</div>`;
-  }
-  return `<div class="tile-grid">${results.map(it=>{
-    const idx = publicPosts.indexOf(it);
-    return renderTile(it, idx, 'public');
-  }).join('')}</div>`;
-}
-
-function onExploreSearch(val){
-  exploreSearchTerm = val;
-  document.querySelectorAll('.exploreResults').forEach(el => el.innerHTML = renderExploreResults());
-}
-
-function setExploreTopic(name){
-  exploreTopic = name;
-  render();
-}
-
-function renderQuotesPage(){
-  return `
-    <div class="page-title">الاقتباسات</div>
-    <div class="muted" style="font-size:12px; margin:-6px 0 12px 0;">دوّر على اقتباس بموضوع يعجبك، أو شارك اقتباسك الخاص</div>
-
-    <div class="composer-trigger" onclick="openComposerMode('quote')">
-      <span>شاركنا اقتباس يعجبك...</span>
-      <div class="composer-plus">+</div>
-    </div>
-
-    <input type="text" class="explore-search" style="margin-top:14px;" placeholder="ابحث عن اقتباس أو شخص..." value="${exploreSearchTerm}" oninput="onExploreSearch(this.value)">
-
-    <div class="topic-row">
-      ${topics.map(t=>`<div class="topic-chip ${exploreTopic===t.name?'active':''}" onclick="setExploreTopic('${t.name}')">${t.emoji} ${t.name}</div>`).join('')}
-    </div>
-
-    <div class="exploreResults">${renderExploreResults()}</div>
-
-    <div class="eyebrow">أشخاص لازم تتابعهم 👥</div>
-    <div class="people-grid">
-      ${peopleDirectory.map(p=>`
-        <div class="people-card">
-          <div class="avatar" style="width:38px;height:38px;font-size:14px;border-radius:12px;margin:0 auto 8px auto;">${p[2]}</div>
-          <b>${p[0]}</b>
-          <span>${p[1]}</span>
-          <button class="d-follow-btn" style="margin:8px auto 0 auto; display:block;" onclick="toast('تمت المتابعة ✅')">متابعة</button>
-        </div>
-      `).join('')}
-    </div>
-  `;
-}
-
-function renderConfessions(){
-  return `
-    <div class="page-title">الاعترافات</div>
-    <div class="muted" style="font-size:12px; margin:-6px 0 14px 0;">اعترافات مجهولة بالكامل — محد بيعرف مين كتبها</div>
-    <div class="composer-trigger" onclick="openComposerMode('confession')">
-      <span>عندك اعتراف؟ شاركه بدون أي أثر لهويتك...</span>
-      <div class="composer-plus">+</div>
-    </div>
-    <div style="margin-top:14px;">
-      ${confessions.map((c,i)=>`
-        <div class="confession-card">
-          <div class="conf-head">
-            <div class="conf-ghost">🎭</div>
-            <b>اعتراف مجهول</b>
-            <span class="muted">${c.time}</span>
-          </div>
-          <div class="conf-text">${c.text}</div>
-          <div class="card-foot" style="margin-top:10px;">
-            <div class="foot-btn ${c.liked?'liked':''}" onclick="toggleConfessionLike(${i})">♥ <span>${c.likes}</span></div>
-            <div class="foot-btn" onclick="toast('تم فتح التعليقات المجهولة 💬')">💬 <span>${c.comments}</span></div>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
-}
-
-function renderProfile(){
-  return `
-    <div class="profile-cover"></div>
-    <div class="profile-header">
-      <div class="profile-avatar">${me.initials}</div>
-      <div class="profile-name">${me.name} ${isVip ? '<span class="vip-badge">VIP</span>' : ''}</div>
-      <div class="muted" style="font-size:11.5px; margin-top:2px;">@you.asq</div>
-      ${!isVip ? `<button class="btn-primary" style="width:auto; padding:9px 20px; margin-top:10px;" onclick="upgradeVip()">✨ الترقية إلى VIP</button>` : ''}
-    </div>
-
-    <div class="stat-card">
-      <div><b>14</b><span>إجابة</span></div>
-      <div><b>1.2k</b><span>متابع</span></div>
-      <div><b>${coins}</b><span>🪙 عملات</span></div>
-    </div>
-
-    <div class="eyebrow">صندوق الوارد <span class="more">${inbox.length} جديد</span></div>
-    <div class="card" style="padding:4px 14px;">
-      ${inbox.length === 0 ? `<div class="empty-state" style="padding:24px;">لا توجد أسئلة جديدة 🎉</div>` :
-        inbox.map(q => `
-        <div class="inbox-item" onclick="openAnswer(${q.id})">
-          <div class="dot"></div>
-          <div class="avatar ${q.anon?'anon':''}" style="width:34px;height:34px;font-size:12px;">${q.anon?'؟':(q.from?q.from[0]:'')}</div>
-          <div style="flex:1;">
-            <div style="font-size:12.5px; line-height:1.4; color:var(--ink);">${q.text}</div>
-            <div class="muted" style="font-size:10px; margin-top:2px;">${q.anon ? 'سؤال مجهول' : q.from} ${q.poll? '· يحتوي استطلاع رأي 📊':''}</div>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-
-    <div class="eyebrow">إعدادات الخصوصية</div>
-    <div class="card">
-      <div class="toggle-row"><span>استقبال الأسئلة المجهولة</span><div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-dot"></div></div></div>
-      <div class="toggle-row"><span>استقبال الشوت أوت</span><div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-dot"></div></div></div>
-      <div class="toggle-row"><span>الفلترة الذكية للألفاظ المسيئة</span><div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-dot"></div></div></div>
-    </div>
-
-    <div class="hint">هذا نموذج أولي تفاعلي للواجهة — البيانات محفوظة مؤقتاً داخل هذه الجلسة فقط.</div>
-  `;
-}
-
-// ---------------- interactions ----------------
-function switchTab(tab){
-  currentTab = tab;
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.tab === tab));
-  render();
-  document.getElementById('content').scrollTop = 0;
-  const dc = document.getElementById('desktopContent');
-  if(dc) dc.scrollTop = 0;
-}
-
-function getArr(src){ return publicPosts; }
-function toggleLike(src, idx){
-  const arr = getArr(src);
-  const item = arr[idx];
-  item.liked = !item.liked;
-  item.likes += item.liked ? 1 : -1;
-  if(item.liked) addCoins(1);
-  render();
-  if(supabaseReady && item.id){
-    sb.from('posts').update({ likes: item.likes }).eq('id', item.id)
-      .then(({error}) => { if(error) console.warn('like sync failed:', error.message); });
-  }
-}
-function saveQuote(src, idx){
-  const arr = getArr(src);
-  const item = arr[idx];
-  item.saved = !item.saved;
-  toast(item.saved ? 'تم حفظ الاقتباس 🔖' : 'تم إلغاء الحفظ');
-  render();
-}
-function toggleConfessionLike(i){
-  const item = confessions[i];
-  item.liked = !item.liked;
-  item.likes += item.liked ? 1 : -1;
-  if(item.liked) addCoins(1);
-  render();
-  if(supabaseReady && item.id){
-    sb.from('confessions').update({ likes: item.likes }).eq('id', item.id)
-      .then(({error}) => { if(error) console.warn('like sync failed:', error.message); });
-  }
-}
-function exportStory(){
-  toast('📤 جاري تجهيز صورة القصة للمشاركة...');
-}
-function upgradeVip(){
-  isVip = true;
-  toast('🎉 مبروك! تم تفعيل VIP');
-  render();
-}
-
-// composer
-function openComposer(){
-  document.getElementById('overlay').classList.add('show');
-  document.getElementById('composerSheet').classList.add('show');
-}
-function openComposerMode(mode){
-  openComposer();
-  setComposerMode(mode);
-}
-function closeSheet(){
-  document.getElementById('overlay').classList.remove('show');
-  document.getElementById('composerSheet').classList.remove('show');
-  document.getElementById('answerSheet').classList.remove('show');
-}
-function setComposerMode(mode){
-  composerMode = mode;
-  document.querySelectorAll('#composerTabs .mode-opt').forEach(d => d.classList.toggle('active', d.dataset.mode === mode));
-  document.getElementById('composerAskBody').style.display = mode==='ask' ? 'block':'none';
-  document.getElementById('composerShoutBody').style.display = mode==='shoutout' ? 'block':'none';
-  document.getElementById('composerQuoteBody').style.display = mode==='quote' ? 'block':'none';
-  document.getElementById('composerConfessionBody').style.display = mode==='confession' ? 'block':'none';
-}
-function togglePollBuilder(){
-  const t = document.getElementById('pollToggle');
-  t.classList.toggle('on');
-  document.getElementById('pollBuilder').style.display = t.classList.contains('on') ? 'block' : 'none';
-}
-function submitAsk(){
-  const txt = document.getElementById('askText').value.trim();
-  if(!txt){ toast('اكتب سؤالاً أولاً'); return; }
-  toast('✅ تم إرسال سؤالك بنجاح');
-  document.getElementById('askText').value = '';
-  closeSheet();
-}
-function submitShoutout(){
-  const txt = document.getElementById('shoutText').value.trim();
-  if(!txt){ toast('اكتب نص الشوت أوت أولاً'); return; }
-  if(coins < 15){ toast('رصيدك من ASKcoins غير كافٍ'); return; }
-  coins -= 15;
-  toast('📢 تم إرسال الشوت أوت للجميع بالقرب منك');
-  document.getElementById('shoutText').value = '';
-  closeSheet();
-  render();
-}
-function submitQuote(){
-  const txt = document.getElementById('quoteText').value.trim();
-  if(!txt){ toast('اكتب الاقتباس أولاً'); return; }
-  const post = {type:'quote', name:me.name, vip:isVip, initials:me.initials, text:txt, likes:0, comments:0, time:'الآن', saved:false, liked:false, topic:'الكل'};
-  if(supabaseReady){
-    sb.from('posts').insert([post]).then(({error}) => {
-      if(error){ console.warn('publish failed:', error.message); publicPosts.unshift(post); render(); }
-      else { loadPosts(); }
-    });
-  } else {
-    publicPosts.unshift(post);
-    render();
-  }
-  toast('❝ تم نشر اقتباسك للجميع');
-  document.getElementById('quoteText').value = '';
-  closeSheet();
-}
-function submitConfession(){
-  const txt = document.getElementById('confessionText').value.trim();
-  if(!txt){ toast('اكتب اعترافك أولاً'); return; }
-  const post = {text:txt, likes:0, comments:0, time:'الآن', liked:false};
-  if(supabaseReady){
-    sb.from('confessions').insert([post]).then(({error}) => {
-      if(error){ console.warn('publish failed:', error.message); confessions.unshift(post); render(); }
-      else { loadConfessions(); }
-    });
-  } else {
-    confessions.unshift(post);
-    render();
-  }
-  toast('🎭 تم نشر اعترافك بدون أي أثر لهويتك');
-  document.getElementById('confessionText').value = '';
-  closeSheet();
-}
-
-// answering
-function openAnswer(id){
-  activeQuestion = inbox.find(q => q.id === id);
-  if(!activeQuestion) return;
-  document.getElementById('answerQuestionPreview').textContent = activeQuestion.text;
-  document.getElementById('answerText').value = '';
-  setAnswerMode('text');
-  document.getElementById('overlay').classList.add('show');
-  document.getElementById('answerSheet').classList.add('show');
-}
-function setAnswerMode(mode){
-  answerMode = mode;
-  document.querySelectorAll('#answerSheet .tab-switch div').forEach(d => d.classList.toggle('active', d.dataset.mode === mode));
-}
-function submitAnswer(){
-  const txt = document.getElementById('answerText').value.trim();
-  if(!txt || !activeQuestion){ toast('اكتب إجابة أولاً'); return; }
-
-  let post;
-  if(answerMode === 'quote'){
-    post = {type:'quote', name:me.name, vip:isVip, initials:me.initials, text:txt, likes:0, comments:0, time:'الآن', saved:false, liked:false, topic:'الكل'};
-    toast('❝ تم تحويل إجابتك لبطاقة اقتباس ونشرها للجميع');
-  } else {
-    post = {
-      type:'answer', name:me.name, vip:isVip, initials:me.initials,
-      anon:activeQuestion.anon, q:activeQuestion.text, a:txt, likes:0, comments:0, time:'الآن', liked:false
-    };
-    toast('✅ تم نشر إجابتك للجميع');
-  }
-  if(supabaseReady){
-    sb.from('posts').insert([post]).then(({error}) => {
-      if(error){ console.warn('publish failed:', error.message); publicPosts.unshift(post); render(); }
-      else { loadPosts(); }
-    });
-  } else {
-    publicPosts.unshift(post);
-  }
-  inbox = inbox.filter(q => q.id !== activeQuestion.id);
-  addCoins(3);
-  closeSheet();
-  render();
-}
-function rejectQuestion(){
-  if(!activeQuestion) return;
-  inbox = inbox.filter(q => q.id !== activeQuestion.id);
-  toast('تم حذف السؤال دون رد');
-  closeSheet();
-  render();
-}
-
-// ================= SUPABASE (real-time shared data) =================
-// 1) Go to https://supabase.com → New project (free) → wait ~2 min while it provisions.
-// 2) SQL Editor → run the schema from supabase-schema.sql (creates tables + policies + enables realtime).
-// 3) Project Settings → API → copy "Project URL" and "anon public" key below.
-// 4) Paste your real values below and push to GitHub. That's it — real-time sync turns on automatically.
-const SUPABASE_CONFIG = {
-  url: "https://exoqrqndxzqibxwmsebv.supabase.co/rest/v1/",
-  anonKey: "sb_publishable_63uE0FwQCr8oiUugXPksJw_gzUbXL_e"
-};
-
-let sb = null;
-const supabaseReady = !SUPABASE_CONFIG.url.includes('YOUR_');
-
-async function loadPosts(){
-  const { data, error } = await sb.from('posts').select('*').order('created_at', { ascending:false });
-  if(error){ console.warn('posts load error:', error.message); return; }
-  if(data && data.length){ publicPosts = data; render(); }
-}
-async function loadConfessions(){
-  const { data, error } = await sb.from('confessions').select('*').order('created_at', { ascending:false });
-  if(error){ console.warn('confessions load error:', error.message); return; }
-  if(data && data.length){ confessions = data; render(); }
-}
-
-if(supabaseReady){
-  sb = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-
-  loadPosts();
-  loadConfessions();
-
-  sb.channel('posts-changes')
-    .on('postgres_changes', { event:'*', schema:'public', table:'posts' }, () => loadPosts())
-    .subscribe();
-
-  sb.channel('confessions-changes')
-    .on('postgres_changes', { event:'*', schema:'public', table:'confessions' }, () => loadConfessions())
-    .subscribe();
-} else {
-  console.info('Supabase not configured yet — running in local demo mode (data resets on refresh, not shared between visitors).');
-}
-
-// init
-render();
-</script>
+<script src="config.js"></script>
+<script src="supabase-client.js"></script>
+<script src="db.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
