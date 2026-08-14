@@ -31,8 +31,8 @@ function toggleNotifPanel(){
     if(notifications.length === 0){
       panel.innerHTML = `<div class="empty-state" style="padding:26px;">لا توجد إشعارات بعد</div>`;
     } else {
-      panel.innerHTML = notifications.map(n => `
-        <div class="notif-item ${n.read?'':'unread'}">
+      panel.innerHTML = notifications.map((n,i) => `
+        <div class="notif-item ${n.read?'':'unread'}" style="cursor:pointer;" onclick="openNotificationAt(${i})">
           <span>🔔</span>
           <div><div>${n.text}</div><div class="muted" style="font-size:10px; margin-top:3px;">${timeAgo(n.created_at)}</div></div>
         </div>
@@ -47,8 +47,24 @@ function toggleNotifPanel(){
     }
   }
 }
+function openNotificationAt(i){
+  const n = notifications[i];
+  if(!n) return;
+  notifPanelOpen = false;
+  document.getElementById('notifPanel').classList.remove('show');
+  if(n.post_id){
+    const post = publicPosts.find(p => p.id === n.post_id);
+    switchTab(post && post.type === 'quote' ? 'quotes' : 'questions');
+  } else if(n.confession_id){
+    switchTab('confessions');
+  }
+}
 
-// ================= الريندر الرئيسي =================
+// أفاتار موحّد: يعرض الصورة الحقيقية لو موجودة، وإلا الحروف كما كان
+function avatarHtml(avatarUrl, initials, extraClass){
+  if(avatarUrl) return `<div class="avatar ${extraClass||''}"><img class="avatar-img" src="${avatarUrl}"></div>`;
+  return `<div class="avatar ${extraClass||''}">${initials||'?'}</div>`;
+}
 function render(){
   if(!currentUser) return;
   let html = '';
@@ -86,7 +102,7 @@ function renderDesktopSidebar(){
       ${peopleDirectory.length === 0 ? `<div class="muted" style="font-size:11px;">ما فيه أعضاء جدد لهسا</div>` :
         peopleDirectory.slice(0,4).map(p=>`
         <div class="d-suggest-row">
-          <div class="avatar" style="width:28px;height:28px;font-size:11px;border-radius:9px;">${p.initials}</div>
+          ${p.avatar_url ? `<div class="avatar" style="width:28px;height:28px;font-size:11px;border-radius:9px;"><img class="avatar-img" src="${p.avatar_url}"></div>` : `<div class="avatar" style="width:28px;height:28px;font-size:11px;border-radius:9px;">${p.initials}</div>`}
           <div><b>${p.name}</b><span>${p.vip?'عضو VIP':'عضو بالمنصة'}</span></div>
           <button class="d-follow-btn ${followingIds.has(p.id)?'following':''}" onclick="toggleFollow('${p.id}')">${followingIds.has(p.id)?'متابَع':'متابعة'}</button>
         </div>
@@ -123,7 +139,7 @@ function renderQATile(it){
     return `
       <div class="card">
         <div class="card-head">
-          <div class="avatar ${it.anon?'anon':''}">${it.anon ? '؟' : it.asker_initials || '?'}</div>
+          ${it.anon ? `<div class="avatar anon">؟</div>` : avatarHtml(it.asker_avatar, it.asker_initials, '')}
           <div class="name-line">
             <b>${it.anon ? 'سؤال مجهول' : (it.asker_name||'')}</b>
             <small>${timeAgo(it.created_at)}${it.is_shoutout ? ' · 📢 شوت أوت' : ''}</small>
@@ -133,7 +149,7 @@ function renderQATile(it){
         <div class="a-text">${it.a}</div>
         <div class="card-foot">
           <div class="foot-btn ${liked?'liked':''}" onclick="toggleLike('${it.id}')">♥ <span>${it.likes}</span></div>
-          <div class="foot-btn">💬 <span>${it.comments||0}</span></div>
+          <div class="foot-btn" onclick="openComments('post','${it.id}')">💬 <span>${it.comments||0}</span></div>
           <div class="foot-btn" onclick="exportStoryImage('${(it.q+' — '+it.a).replace(/'/g,"\\'")}')">📤 مشاركة</div>
         </div>
       </div>
@@ -142,7 +158,7 @@ function renderQATile(it){
   return `
     <div class="card">
       <div class="card-head">
-        <div class="avatar ${it.anon?'anon':''}">${it.anon ? '؟' : it.asker_initials || '?'}</div>
+        ${it.anon ? `<div class="avatar anon">؟</div>` : avatarHtml(it.asker_avatar, it.asker_initials, '')}
         <div class="name-line">
           <b>${it.anon ? 'سؤال مجهول' : (it.asker_name||'')} ${it.is_shoutout ? '<span class="vip-badge">📢 شوت أوت</span>':''}</b>
           <small>${timeAgo(it.created_at)}</small>
@@ -167,12 +183,12 @@ function renderTile(item){
   return `
     <div class="post-tile">
       <div class="type-ic">❝</div>
-      <div class="tile-avatar">${item.author_initials || (item.anon?'؟':'?')}</div>
+      ${item.author_avatar && !item.anon ? `<div class="tile-avatar"><img class="avatar-img" src="${item.author_avatar}"></div>` : `<div class="tile-avatar">${item.author_initials || (item.anon?'؟':'?')}</div>`}
       <div class="tile-name">${item.anon ? 'مجهول' : (item.author_name||'')}</div>
       <div class="tile-content quote">${item.text}</div>
       <div class="tile-foot">
         <div class="t-like ${liked?'liked':''}" onclick="toggleLike('${item.id}')">♥ ${item.likes}</div>
-        <div>💬 ${item.comments||0}</div>
+        <div onclick="openComments('post','${item.id}')" style="cursor:pointer;">💬 ${item.comments||0}</div>
       </div>
     </div>
   `;
@@ -210,7 +226,7 @@ function renderQuotesPage(){
       ${peopleDirectory.length === 0 ? `<div class="muted" style="font-size:12px;grid-column:1/-1;">ما فيه أعضاء جدد لهسا — كن أول من يدعو أصحابه!</div>` :
         peopleDirectory.map(p=>`
         <div class="people-card">
-          <div class="avatar" style="width:38px;height:38px;font-size:14px;border-radius:12px;margin:0 auto 8px auto;">${p.initials}</div>
+          ${p.avatar_url ? `<div class="avatar" style="width:38px;height:38px;font-size:14px;border-radius:12px;margin:0 auto 8px auto;"><img class="avatar-img" src="${p.avatar_url}"></div>` : `<div class="avatar" style="width:38px;height:38px;font-size:14px;border-radius:12px;margin:0 auto 8px auto;">${p.initials}</div>`}
           <b>${p.name}</b>
           <span>${p.vip?'عضو VIP ✨':'عضو بالمنصة'}</span>
           <button class="d-follow-btn ${followingIds.has(p.id)?'following':''}" style="margin:8px auto 0 auto; display:block;" onclick="toggleFollow('${p.id}')">${followingIds.has(p.id)?'متابَع ✓':'متابعة'}</button>
@@ -243,7 +259,7 @@ function renderConfessions(){
           <div class="conf-text">${c.text}</div>
           <div class="card-foot" style="margin-top:10px;">
             <div class="foot-btn ${liked?'liked':''}" onclick="toggleConfessionLike('${c.id}')">♥ <span>${c.likes}</span></div>
-            <div class="foot-btn">💬 <span>${c.comments||0}</span></div>
+            <div class="foot-btn" onclick="openComments('confession','${c.id}')">💬 <span>${c.comments||0}</span></div>
             <div class="foot-btn" onclick="exportStoryImage('${c.text.replace(/'/g,"\\'")}')">📤 مشاركة</div>
           </div>
         </div>
@@ -258,7 +274,12 @@ function renderProfile(){
   return `
     <div class="profile-cover"></div>
     <div class="profile-header">
-      <div class="profile-avatar">${currentUser.initials}</div>
+      <div class="profile-avatar" style="position:relative;">
+        ${currentUser.avatar_url ? `<img class="avatar-img" src="${currentUser.avatar_url}">` : currentUser.initials}
+        <label class="avatar-upload-btn" title="تغيير الصورة">
+          📷<input type="file" accept="image/*" style="display:none;" onchange="uploadAvatar(this.files[0])">
+        </label>
+      </div>
       <div class="profile-name">${currentUser.name} ${currentUser.vip ? '<span class="vip-badge">VIP</span>' : ''}</div>
       ${!currentUser.vip ? `<button class="btn-primary" style="width:auto; padding:9px 20px; margin-top:10px;" onclick="upgradeVip()">✨ الترقية إلى VIP</button>` : ''}
     </div>
@@ -341,6 +362,7 @@ function closeSheet(){
   document.getElementById('overlay').classList.remove('show');
   document.getElementById('composerSheet').classList.remove('show');
   document.getElementById('answerSheet').classList.remove('show');
+  document.getElementById('commentsSheet').classList.remove('show');
 }
 function setComposerMode(mode){
   composerMode = mode;
