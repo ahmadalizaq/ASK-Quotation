@@ -2,17 +2,17 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>ASK & Quotation</title>
-  
+
   <!-- الخطوط -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@600;800&family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
-  
-  <!-- تحميل مكتبة Supabase بأمان -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+
+  <!-- مكتبة Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -37,6 +37,7 @@
       </div>
       <div class="auth-field">
         <label>كلمة المرور</label>
+
         <input type="password" id="authPassword" placeholder="6 أحرف على الأقل">
       </div>
       
@@ -77,7 +78,7 @@
         <div class="logo-text">ASK <span>&Q</span></div>
       </div>
       <div class="d-header-actions">
-        <div class="d-coin-chip">🪙 <span id="dCoinCount">50</span></div>
+        <div class="d-coin-chip">🪙 <span id="dCoinCount">0</span></div>
       </div>
     </div>
     <div class="d-body">
@@ -93,8 +94,10 @@
 
   <div class="toast" id="toast"></div>
 
-  <!-- السكريبتات بترتيبها الصحيح لمنع التضارب -->
+  <!-- الترتيب الصحيح وجميع الملفات استدعيت أونلاين -->
   <script src="config.js"></script>
+  <script src="supabase-client.js"></script>
+  <script src="db.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
