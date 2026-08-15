@@ -455,6 +455,7 @@ function renderProfile(){
     <div class="profile-cover"></div>
     <div class="profile-header">
       <div class="profile-avatar" style="position:relative;">
+        ${currentUser.vip ? `<div class="vip-crown">✦ VIP ✦</div>` : ''}
         ${currentUser.avatar_url ? `<img class="avatar-img" src="${esc(currentUser.avatar_url)}">` : esc(currentUser.initials)}
         <label class="avatar-upload-btn" title="تغيير الصورة">
           📷<input type="file" accept="image/*" style="display:none;" onchange="uploadAvatar(this.files[0])">
@@ -577,7 +578,10 @@ function renderProfileSheet(p, info){
 
   document.getElementById('profileSheetBody').innerHTML = `
     <div style="text-align:center;">
-      ${avatarHtml(p.avatar_url, p.initials, '')}
+      <div style="position:relative; display:inline-block;">
+        ${p.vip ? `<div class="vip-crown">✦ VIP ✦</div>` : ''}
+        ${avatarHtml(p.avatar_url, p.initials, '')}
+      </div>
       <div class="profile-name" style="justify-content:center; margin-top:10px;">${esc(p.name)} ${p.vip?'<span class="vip-badge">VIP</span>':''}</div>
       ${p.bio ? `<div class="muted" style="font-size:12px; margin-top:4px; max-width:280px; margin-inline:auto;">${esc(p.bio)}</div>` : ''}
       ${!isMe ? `

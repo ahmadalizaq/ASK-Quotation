@@ -137,9 +137,9 @@
   .d-search{ flex:1; max-width:420px; }
   .d-search input{
     width:100%; background:var(--red-soft); border:1px solid rgba(255,255,255,0.18); border-radius:12px;
-    padding:10px 14px; color:#fff; font-size:12.5px; outline:none;
+    padding:10px 14px; color:rgba(54,42,32,0.88); font-size:12.5px; outline:none;
   }
-  .d-search input::placeholder{ color:var(--on-red-muted); }
+  .d-search input::placeholder{ color:rgba(54,42,32,0.5); }
   .d-header-actions{ display:flex; align-items:center; gap:10px; margin-inline-start:auto; }
   .d-coin-chip{
     display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.18);
@@ -452,3 +452,19 @@
   /* انتقال ناعم عند تبديل الصفحات */
   .content-fade{ animation: contentFade .3s ease; }
   @keyframes contentFade{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+
+  /* ================= شارة VIP متحركة بألوان RGB فوق الصورة الشخصية ================= */
+  .vip-crown{
+    position:absolute; top:-13px; left:50%; transform:translateX(-50%);
+    font-family:'El Messiri',sans-serif; font-weight:800; font-size:10.5px; letter-spacing:1.5px;
+    white-space:nowrap; z-index:3; padding:2px 4px;
+    background:linear-gradient(90deg, #FF2D55, #FF9500, #FFD60A, #34C759, #00C7BE, #32ADE6, #AF52DE, #FF2D55);
+    background-size:300% 100%;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation: vipRgbShift 3s linear infinite;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25));
+  }
+  @keyframes vipRgbShift{
+    0%{ background-position:0% 50%; }
+    100%{ background-position:300% 50%; }
+  }
