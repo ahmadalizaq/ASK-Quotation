@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>ASK & Quotation</title>
+<title>QQC — أسئلة، اقتباسات، اعترافات</title>
+<meta name="description" content="QQC — منصة عربية لطرح الأسئلة، مشاركة الاقتباسات، والاعتراف بصراحة (باسمك أو مجهول) مع مجتمع حقيقي.">
+<meta name="theme-color" content="#E2242F">
+<meta property="og:title" content="QQC — Question · Quote · Confession">
+<meta property="og:description" content="اسأل، شارك اقتباساتك، واعترف بصراحة — باسمك أو مجهول بالكامل.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23E2242F'/%3E%3Ctext x='50' y='68' font-size='48' font-family='Georgia,serif' font-weight='bold' fill='white' text-anchor='middle'%3EQ%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -66,7 +72,8 @@
       <div class="qqc-logo qqc-logo-sm">QQC</div>
     </div>
     <div class="top-actions">
-      <div class="icon-btn" onclick="toggleNotifPanel()">🔔<span class="badge-dot" id="notifBadgeM" style="display:none;">0</span></div>
+      <div class="icon-btn" onclick="openGlobalSearch()" aria-label="بحث">🔍</div>
+      <div class="icon-btn" onclick="toggleNotifPanel()" aria-label="الإشعارات">🔔<span class="badge-dot" id="notifBadgeM" style="display:none;">0</span></div>
     </div>
   </div>
 
@@ -80,7 +87,7 @@
       <div class="nav-item" data-tab="confessions" onclick="switchTab('confessions')"><div class="ic">🎭</div><div class="lb">الاعترافات</div></div>
       <div class="nav-item" data-tab="messages" onclick="switchTab('messages')"><div class="ic">💬</div><div class="lb">الرسائل</div></div>
     </div>
-    <div class="nav-fab" onclick="openComposer()">+</div>
+    <div class="nav-fab" onclick="openComposer()" aria-label="إنشاء جديد" role="button" tabindex="0">+</div>
   </div>
 </div>
 
@@ -91,7 +98,7 @@
       <div class="qqc-logo qqc-logo-sm">QQC</div>
     </div>
     <div class="d-search">
-      <input type="text" id="dHeaderSearch" placeholder="ابحث عن اقتباس... واضغط Enter" onkeydown="if(event.key==='Enter') headerSearch(this.value)">
+      <input type="text" id="dHeaderSearch" placeholder="ابحث عن سؤال، اقتباس، أو شخص... واضغط Enter" onkeydown="if(event.key==='Enter') openGlobalSearch(this.value)">
     </div>
     <div class="d-header-actions">
       <div class="d-coin-chip">🪙 <span id="dCoinCount">0</span></div>
@@ -140,7 +147,7 @@
 <!-- composer sheet -->
 <div class="sheet" id="composerSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title-row"><div class="sheet-title">إنشاء جديد</div><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+  <div class="sheet-title-row"><div class="sheet-title">إنشاء جديد</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
   <div class="mode-row" id="composerTabs">
     <div class="mode-opt active" data-mode="ask" onclick="setComposerMode('ask')"><span class="ic">❓</span><span class="lb">سؤال</span></div>
     <div class="mode-opt" data-mode="shoutout" onclick="setComposerMode('shoutout')"><span class="ic">📢</span><span class="lb">شوت أوت</span></div>
@@ -189,14 +196,14 @@
 <!-- profile view sheet -->
 <div class="sheet" id="profileSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-close" style="position:absolute; top:14px; left:14px;" onclick="closeSheet()">✕</div>
+  <div class="sheet-close" style="position:absolute; top:14px; left:14px;" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div>
   <div id="profileSheetBody"></div>
 </div>
 
 <!-- DM thread sheet -->
 <div class="sheet" id="threadSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title-row"><div class="sheet-title" id="threadTitle">محادثة</div><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+  <div class="sheet-title-row"><div class="sheet-title" id="threadTitle">محادثة</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
   <div id="threadMessages" style="max-height:46vh; overflow-y:auto; margin-bottom:12px; display:flex; flex-direction:column;"></div>
   <div style="display:flex; gap:8px;">
     <input type="text" id="threadText" maxlength="1000" placeholder="اكتب رسالتك..." style="flex:1;" onkeydown="if(event.key==='Enter') sendMessage()">
@@ -207,14 +214,29 @@
 <!-- share picker sheet -->
 <div class="sheet" id="sharePickerSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title-row"><div class="sheet-title">شارك مع...</div><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+  <div class="sheet-title-row"><div class="sheet-title">شارك مع...</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
   <div id="sharePickerList"></div>
+</div>
+
+<!-- بحث موحّد -->
+<div class="sheet" id="searchSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title-row"><div class="sheet-title">بحث</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
+  <input type="text" id="globalSearchInput" class="explore-search" placeholder="ابحث عن سؤال، اقتباس، اعتراف، أو شخص..." oninput="onGlobalSearch(this.value)">
+  <div id="globalSearchResults" style="margin-top:12px; max-height:60vh; overflow-y:auto;"></div>
+</div>
+
+<!-- مين أعجب -->
+<div class="sheet" id="likersSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title-row"><div class="sheet-title">أعجب به</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
+  <div id="likersList" style="max-height:50vh; overflow-y:auto;"></div>
 </div>
 
 <!-- comments sheet -->
 <div class="sheet" id="commentsSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title-row"><div class="sheet-title">التعليقات</div><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+  <div class="sheet-title-row"><div class="sheet-title">التعليقات</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
   <div id="commentsList" style="max-height:42vh; overflow-y:auto; margin-bottom:12px;"></div>
   <textarea id="commentText" rows="2" maxlength="500" oninput="growAndCount(this)" placeholder="اكتب تعليقك..."></textarea>
   <div class="char-count" id="commentText-count">0/500</div>
@@ -224,7 +246,7 @@
 <!-- answer sheet -->
 <div class="sheet" id="answerSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title-row"><div class="sheet-title">الإجابة على السؤال</div><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+  <div class="sheet-title-row"><div class="sheet-title">الإجابة على السؤال</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
   <div class="q-bubble" id="answerQuestionPreview"></div>
   <textarea id="answerText" rows="4" maxlength="1000" oninput="growAndCount(this)" placeholder="اكتب إجابتك..."></textarea>
   <div class="char-count" id="answerText-count">0/1000</div>

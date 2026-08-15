@@ -136,8 +136,8 @@ function openNotificationAt(i){
 
 // أفاتار موحّد: يعرض الصورة الحقيقية لو موجودة، وإلا الحروف كما كان
 function avatarHtml(avatarUrl, initials, extraClass){
-  if(avatarUrl) return `<div class="avatar ${extraClass||''}"><img class="avatar-img" src="${avatarUrl}"></div>`;
-  return `<div class="avatar ${extraClass||''}">${initials||'?'}</div>`;
+  if(avatarUrl) return `<div class="avatar ${extraClass||''}"><img class="avatar-img" src="${avatarUrl}" alt="صورة شخصية"></div>`;
+  return `<div class="avatar ${extraClass||''}" role="img" aria-label="صورة شخصية">${initials||'?'}</div>`;
 }
 // يضيف onclick لفتح صفحة الشخص — يُستخدم على أي أفاتار/اسم قابل للزيارة
 function up(userId){
@@ -191,15 +191,71 @@ function renderDesktopSidebar(){
   `;
 }
 
-function headerSearch(val){
-  exploreSearchTerm = val;
-  exploreTopic = 'الكل';
-  switchTab('quotes');
+// ================= بحث موحّد =================
+function openGlobalSearch(prefill){
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('searchSheet').classList.add('show');
+  const input = document.getElementById('globalSearchInput');
+  input.value = prefill || '';
+  onGlobalSearch(input.value);
+  setTimeout(()=> input.focus(), 250);
+}
+function onGlobalSearch(val){
+  const term = val.trim();
+  const box = document.getElementById('globalSearchResults');
+  if(!term){ box.innerHTML = `<div class="empty-state" style="padding:24px;">اكتب شي تدور عليه — سؤال، اقتباس، اعتراف، أو اسم شخص</div>`; return; }
+
+  const quotes = publicPosts.filter(p => p.type==='quote' &&
+    ((p.text||'').includes(term) || (!p.anon && (p.author_name||'').includes(term))));
+  const questions = publicPosts.filter(p => p.type==='qa' &&
+    ((p.q||'').includes(term) || (p.a||'').includes(term) || (!p.anon && (p.asker_name||'').includes(term))));
+  const confs = confessions.filter(c => (c.text||'').includes(term));
+  const people = peopleDirectory.filter(p => (p.name||'').includes(term));
+
+  if(quotes.length===0 && questions.length===0 && confs.length===0 && people.length===0){
+    box.innerHTML = `<div class="empty-state" style="padding:24px;"><div class="big">🔍</div>ما فيه نتائج مطابقة</div>`;
+    return;
+  }
+
+  let html = '';
+  if(people.length){
+    html += `<div class="eyebrow">أشخاص 👥</div>`;
+    html += people.slice(0,6).map(p=>`
+      <div class="inbox-item" style="cursor:default;">
+        <span ${up(p.id)}>${avatarHtml(p.avatar_url, p.initials, '')}</span>
+        <div style="flex:1;" ${up(p.id)}><b style="font-family:'El Messiri',sans-serif; font-size:12.5px; color:var(--ink);">${esc(p.name)}</b></div>
+        <button class="d-follow-btn ${followingIds.has(p.id)?'following':''}" onclick="toggleFollow('${p.id}')">${followingIds.has(p.id)?'متابَع':'متابعة'}</button>
+      </div>
+    `).join('');
+  }
+  if(quotes.length){
+    html += `<div class="eyebrow">اقتباسات ❝</div><div class="tile-grid">${quotes.slice(0,10).map(renderTile).join('')}</div>`;
+  }
+  if(questions.length){
+    html += `<div class="eyebrow">أسئلة ❓</div>${questions.slice(0,10).map(renderQATile).join('')}`;
+  }
+  if(confs.length){
+    html += `<div class="eyebrow">اعترافات 🎭</div>${confs.slice(0,10).map(renderConfessionCard).join('')}`;
+  }
+  box.innerHTML = html;
 }
 
 // ---- صفحة الأسئلة ----
+let questionTopic = 'الكل';
+function computeQuestionTopics(){
+  const seedNames = topics.map(t=>t.name);
+  const extra = new Set();
+  publicPosts.forEach(p=>{ if(p.type==='qa' && p.topic && !seedNames.includes(p.topic)) extra.add(p.topic); });
+  return [...topics, ...[...extra].map(name=>({name, emoji:'#'}))];
+}
+function setQuestionTopic(name){
+  questionTopic = name;
+  render();
+}
 function renderQuestions(){
-  const qas = publicPosts.filter(p=>p.type==='qa');
+  const allQas = publicPosts.filter(p=>p.type==='qa');
+  const qas = questionTopic === 'الكل' ? allQas : allQas.filter(p=>p.topic === questionTopic);
+  const topicsList = computeQuestionTopics();
   return `
     <div class="page-title">الأسئلة</div>
     <div class="muted" style="font-size:12px; margin:-2px 0 14px 0;">أسئلة مفتوحة من الجميع — جاوب على أي سؤال يعجبك</div>
@@ -207,8 +263,11 @@ function renderQuestions(){
       <span>عندك سؤال؟ اطرحه الحين...</span>
       <div class="composer-plus">+</div>
     </div>
-    <div style="margin-top:14px;">
-      ${qas.length===0 ? `<div class="empty-state"><div class="big">❓</div>ما فيه أسئلة بعد<br>كن أول شخص يسأل</div>` :
+    <div class="topic-row" style="margin-top:14px;">
+      ${topicsList.map(t=>`<div class="topic-chip ${questionTopic===t.name?'active':''}" onclick="setQuestionTopic('${escAttr(t.name)}')">${t.emoji} ${esc(t.name)}</div>`).join('')}
+    </div>
+    <div style="margin-top:4px;">
+      ${qas.length===0 ? `<div class="empty-state"><div class="big">❓</div>ما فيه أسئلة بهالفئة بعد<br>كن أول شخص يسأل</div>` :
         qas.map(it => renderQATile(it)).join('')}
     </div>
   `;
@@ -233,9 +292,10 @@ function renderQATile(it){
           جاوب عليه: <b style="color:var(--ink);">${esc(it.answered_by_name)}</b>
         </div>
         <div class="card-foot">
-          <div class="foot-btn ${liked?'liked':''}" onclick="popHeart(this); toggleLike('${it.id}')">♥ <span>${it.likes}</span></div>
+          <div class="foot-btn ${liked?'liked':''}"><span onclick="popHeart(this); toggleLike('${it.id}')">♥</span> <span onclick="openLikers('post','${it.id}')" style="cursor:pointer;">${it.likes}</span></div>
           <div class="foot-btn" onclick="openComments('post','${it.id}')">💬 <span>${it.comments||0}</span></div>
           <div class="foot-btn" onclick="openSharePicker('${b64(it.q+' — '+it.a)}')">📤 مشاركة</div>
+          <div class="foot-btn" onclick="nativeShare('${b64(it.q+' — '+it.a)}')">🔗</div>
           ${isOwner ? `<div class="foot-btn" onclick="deletePost('${it.id}')">🗑️</div>` : `<div class="foot-btn" onclick="reportContent('post','${it.id}')">🚩</div>`}
         </div>
       </div>
@@ -277,9 +337,10 @@ function renderTile(item){
       <div class="tile-name" ${up(item.anon?null:item.author_id)}>${item.anon ? 'مجهول' : esc(item.author_name)}</div>
       <div class="tile-content quote">${esc(item.text)}</div>
       <div class="tile-foot">
-        <div class="t-like ${liked?'liked':''}" onclick="popHeart(this); toggleLike('${item.id}')">♥ ${item.likes}</div>
+        <div class="t-like ${liked?'liked':''}"><span onclick="popHeart(this); toggleLike('${item.id}')">♥</span> <span onclick="openLikers('post','${item.id}')" style="cursor:pointer;">${item.likes}</span></div>
         <div onclick="openComments('post','${item.id}')" style="cursor:pointer;">💬 ${item.comments||0}</div>
         <div onclick="openSharePicker('${b64(item.text)}')" style="cursor:pointer;">📤</div>
+        <div onclick="nativeShare('${b64(item.text)}')" style="cursor:pointer;">🔗</div>
         ${isOwner
           ? `<div onclick="editQuote('${item.id}')" style="cursor:pointer;">✏️</div><div onclick="deletePost('${item.id}')" style="cursor:pointer;">🗑️</div>`
           : `<div onclick="reportContent('post','${item.id}')" style="cursor:pointer;">🚩</div>`}
@@ -346,6 +407,28 @@ function renderQuotesPage(){
 }
 
 // ---- صفحة الاعترافات ----
+function renderConfessionCard(c){
+  const liked = myLikedConfessionIds.has(c.id);
+  const isAnon = c.anon !== false;
+  const isOwner = c.user_id === currentUser.id;
+  return `
+    <div class="confession-card">
+      <div class="conf-head">
+        <span ${up(isAnon?null:c.user_id)}>${isAnon ? `<div class="conf-ghost">🎭</div>` : avatarHtml(c.user_avatar, c.user_initials, 'conf-ghost')}</span>
+        <b ${up(isAnon?null:c.user_id)}>${isAnon ? 'اعتراف مجهول' : esc(c.user_name)}</b>
+        <span class="muted">${timeAgo(c.created_at)}</span>
+      </div>
+      <div class="conf-text">${esc(c.text)}</div>
+      <div class="card-foot" style="margin-top:10px;">
+        <div class="foot-btn ${liked?'liked':''}"><span onclick="popHeart(this); toggleConfessionLike('${c.id}')">♥</span> <span onclick="openLikers('confession','${c.id}')" style="cursor:pointer;">${c.likes}</span></div>
+        <div class="foot-btn" onclick="openComments('confession','${c.id}')">💬 <span>${c.comments||0}</span></div>
+        <div class="foot-btn" onclick="openSharePicker('${b64(c.text)}')">📤 مشاركة</div>
+        <div class="foot-btn" onclick="nativeShare('${b64(c.text)}')">🔗</div>
+        ${isOwner ? `<div class="foot-btn" onclick="deleteConfession('${c.id}')">🗑️</div>` : `<div class="foot-btn" onclick="reportContent('confession','${c.id}')">🚩</div>`}
+      </div>
+    </div>
+  `;
+}
 function renderConfessions(){
   return `
     <div class="page-title">الاعترافات</div>
@@ -356,26 +439,7 @@ function renderConfessions(){
     </div>
     <div style="margin-top:14px;">
       ${confessions.length===0 ? `<div class="empty-state"><div class="big">🎭</div>ما فيه اعترافات بعد<br>كن أول من يعترف بشي</div>` :
-        confessions.map(c=>{
-        const liked = myLikedConfessionIds.has(c.id);
-        const isAnon = c.anon !== false;
-        const isOwner = c.user_id === currentUser.id;
-        return `
-        <div class="confession-card">
-          <div class="conf-head">
-            <span ${up(isAnon?null:c.user_id)}>${isAnon ? `<div class="conf-ghost">🎭</div>` : avatarHtml(c.user_avatar, c.user_initials, 'conf-ghost')}</span>
-            <b ${up(isAnon?null:c.user_id)}>${isAnon ? 'اعتراف مجهول' : esc(c.user_name)}</b>
-            <span class="muted">${timeAgo(c.created_at)}</span>
-          </div>
-          <div class="conf-text">${esc(c.text)}</div>
-          <div class="card-foot" style="margin-top:10px;">
-            <div class="foot-btn ${liked?'liked':''}" onclick="popHeart(this); toggleConfessionLike('${c.id}')">♥ <span>${c.likes}</span></div>
-            <div class="foot-btn" onclick="openComments('confession','${c.id}')">💬 <span>${c.comments||0}</span></div>
-            <div class="foot-btn" onclick="openSharePicker('${b64(c.text)}')">📤 مشاركة</div>
-            ${isOwner ? `<div class="foot-btn" onclick="deleteConfession('${c.id}')">🗑️</div>` : `<div class="foot-btn" onclick="reportContent('confession','${c.id}')">🚩</div>`}
-          </div>
-        </div>
-      `;}).join('')}
+        confessions.map(renderConfessionCard).join('')}
     </div>
   `;
 }
@@ -393,6 +457,7 @@ function renderProfile(){
         </label>
       </div>
       <div class="profile-name">${esc(currentUser.name)} ${currentUser.vip ? '<span class="vip-badge">VIP</span>' : ''}</div>
+      <div class="muted" style="font-size:12px; margin-top:4px; max-width:280px; margin-inline:auto;">${currentUser.bio ? esc(currentUser.bio) : 'ما فيه نبذة بعد'} — <a onclick="editMyBio()" style="color:var(--red); cursor:pointer; font-weight:700;">تعديل</a></div>
       ${!currentUser.vip ? `<button class="btn-primary" style="width:auto; padding:9px 20px; margin-top:10px;" onclick="upgradeVip()">✨ الترقية إلى VIP</button>` : ''}
     </div>
 
@@ -503,6 +568,7 @@ function renderProfileSheet(p, info){
     <div style="text-align:center;">
       ${avatarHtml(p.avatar_url, p.initials, '')}
       <div class="profile-name" style="justify-content:center; margin-top:10px;">${esc(p.name)} ${p.vip?'<span class="vip-badge">VIP</span>':''}</div>
+      ${p.bio ? `<div class="muted" style="font-size:12px; margin-top:4px; max-width:280px; margin-inline:auto;">${esc(p.bio)}</div>` : ''}
       ${!isMe ? `
       <div style="display:flex; gap:8px; margin-top:14px;">
         <button class="btn-primary" style="margin-top:0;" onclick="toggleFollow('${p.id}')">${followingIds.has(p.id)?'إلغاء المتابعة':'متابعة'}</button>
@@ -550,6 +616,24 @@ function renderSharePicker(){
   `).join('');
 }
 
+// ---- شيت مين أعجب ----
+function renderLikersList(rows){
+  const box = document.getElementById('likersList');
+  if(!box) return;
+  if(!rows || rows.length === 0){
+    box.innerHTML = `<div class="empty-state" style="padding:20px;">محد أعجب بهذا بعد — كن أول واحد</div>`;
+    return;
+  }
+  box.innerHTML = rows.map(r=>{
+    const p = r.profiles || {};
+    return `
+    <div class="inbox-item" ${up(r.user_id)}>
+      ${avatarHtml(p.avatar_url, p.initials, '')}
+      <b style="font-family:'El Messiri',sans-serif; font-size:12.5px; color:var(--ink);">${esc(p.name)||'مستخدم'}</b>
+    </div>`;
+  }).join('');
+}
+
 // ================= تصدير صورة القصة (توليد حقيقي بالمتصفح، بدون سيرفر) =================
 function exportStoryImage(text){
   const canvas = document.createElement('canvas');
@@ -584,6 +668,19 @@ function exportStoryImage(text){
   link.href = canvas.toDataURL('image/png');
   link.click();
   toast('📤 تم تجهيز الصورة للتحميل');
+}
+
+// مشاركة خارجية حقيقية (واتساب/تويتر/أي تطبيق) عبر واجهة المتصفح، أو نسخ للحافظة كخيار احتياطي
+async function nativeShare(encodedText){
+  const text = unb64(encodedText);
+  if(navigator.share){
+    try{ await navigator.share({ text: text + '\n— QQC' }); }catch(e){ /* المستخدم ألغى المشاركة، تجاهل */ }
+  } else if(navigator.clipboard){
+    try{ await navigator.clipboard.writeText(text); toast('✅ تم نسخ النص — الصقه أي مكان'); }
+    catch(e){ toast('تعذر النسخ'); }
+  } else {
+    toast('المشاركة غير مدعومة بهذا المتصفح');
+  }
 }
 
 // ================= نافذة الإنشاء (composer) =================
@@ -624,6 +721,14 @@ function openAnswer(postId){
 
 // ================= بدء التطبيق =================
 initApp();
+
+// دعم تفعيل عناصر role="button" بلوحة المفاتيح (Enter/Space) لمن يتصفح بدون فأرة
+document.addEventListener('keydown', e => {
+  if((e.key === 'Enter' || e.key === ' ') && e.target && e.target.getAttribute && e.target.getAttribute('role') === 'button'){
+    e.preventDefault();
+    e.target.click();
+  }
+});
 
 // نلغي أي Service Worker قديم مسجّل من قبل (كان سبب مشكلة الكاش العالق) —
 // يضمن إن أي زائر عنده نسخة قديمة مكسورة محفوظة، تنشال تلقائياً.

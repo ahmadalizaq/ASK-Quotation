@@ -385,3 +385,15 @@
   @keyframes skeletonShine{ 0%{ background-position:100% 50%; } 100%{ background-position:0 50%; } }
   .skel-card{ background:var(--paper); border:1.5px solid var(--line-on-white); border-radius:16px; padding:15px; margin-bottom:12px; }
   .skel-line{ height:11px; margin-bottom:8px; }
+
+  /* ================= الوصولية: تنقل بلوحة المفاتيح ================= */
+  [role="button"]:focus-visible,
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  .nav-item:focus-visible,
+  .topic-chip:focus-visible{
+    outline: 2px solid var(--orange);
+    outline-offset: 2px;
+  }

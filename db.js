@@ -286,6 +286,16 @@ async function toggleFollow(targetId){
   }
   render();
 }
+async function editMyBio(){
+  const newBio = await showConfirm('نبذتك التعريفية', '', {icon:'✍️', okText:'حفظ', danger:false, withInput:true, inputValue: currentUser.bio || '', inputPlaceholder:'اكتب نبذة قصيرة عنك...'});
+  if(newBio === false) return;
+  const { error } = await sb.from('profiles').update({ bio: newBio || null }).eq('id', currentUser.id);
+  if(error){ toast('❌ ما قدرنا نحفظ: ' + error.message); return; }
+  currentUser.bio = newBio || null;
+  toast('✅ تم تحديث نبذتك');
+  render();
+}
+
 async function upgradeVip(){
   const { error } = await sb.from('profiles').update({vip:true}).eq('id', currentUser.id);
   if(error){ toast('صار خلل، حاول مرة ثانية'); return; }
@@ -540,6 +550,24 @@ async function shareToPerson(userId){
   toast('✅ تم الإرسال');
   closeSheet();
   loadConversations();
+}
+
+// ================= مين أعجب =================
+async function openLikers(type, id){
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('likersSheet').classList.add('show');
+  document.getElementById('likersList').innerHTML = `<div class="muted" style="padding:20px;text-align:center;font-size:12px;">...جاري التحميل</div>`;
+  const table = type === 'post' ? 'likes' : 'confession_likes';
+  const col = type === 'post' ? 'post_id' : 'confession_id';
+  const { data, error } = await sb.from(table)
+    .select('user_id, profiles(name, initials, avatar_url)')
+    .eq(col, id).order('created_at', { ascending:false }).limit(100);
+  if(error){
+    document.getElementById('likersList').innerHTML = `<div class="muted" style="padding:20px;text-align:center;font-size:12px;">تعذر التحميل</div>`;
+    console.warn(error.message);
+    return;
+  }
+  renderLikersList(data || []);
 }
 
 // ================= التعليقات =================
