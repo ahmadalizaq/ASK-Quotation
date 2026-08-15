@@ -1,6 +1,6 @@
 // ================= الحالة العامة (state) =================
 let currentUser = null;      // { id, name, initials, coins, vip }
-let currentTab = 'profile';
+let currentTab = 'questions';
 let publicPosts = [];        // منشورات من نوع 'quote' و 'qa'
 let confessions = [];
 let notifications = [];
@@ -130,6 +130,7 @@ async function bootApp(session){
   await Promise.all([loadPosts(), loadConfessions(), loadMyLikes(), loadNotifications(), loadPeople(), loadFollowing(), loadConversations(), loadFeatured()]);
   render();
   subscribeRealtime();
+  hideBootLoader();
 }
 
 // ================= تحميل البيانات =================
@@ -294,8 +295,10 @@ async function upgradeVip(){
 }
 
 async function deleteMyAccount(){
-  if(!confirm('هذا حذف نهائي لحسابك وكل محتواك — ما يرجع بعدها. متأكد تماماً؟')) return;
-  if(!confirm('تأكيد أخير: بيتحذف حسابك الآن للأبد. أكيد؟')) return;
+  const step1 = await showConfirm('حذف الحساب نهائياً', 'هذا حذف نهائي لحسابك وكل محتواك — ما يرجع بعدها.', {icon:'⚠️', okText:'متابعة'});
+  if(!step1) return;
+  const step2 = await showConfirm('تأكيد أخير', 'بيتحذف حسابك الآن للأبد. أكيد تماماً؟', {icon:'🗑️', okText:'احذف حسابي'});
+  if(!step2) return;
   const { error } = await sb.rpc('delete_my_account');
   if(error){ toast('❌ ما قدرنا نحذف الحساب: ' + error.message); console.warn(error.message); return; }
   toast('تم حذف حسابك');
@@ -306,21 +309,21 @@ async function deleteMyAccount(){
 
 // ================= تعديل/حذف المحتوى الخاص بك =================
 async function deletePost(postId){
-  if(!confirm('حذف هذا المنشور نهائياً؟')) return;
+  if(!(await showConfirm('حذف المنشور', 'حذف هذا المنشور نهائياً؟ ما يمكن التراجع.', {icon:'🗑️', okText:'حذف'}))) return;
   const { error } = await sb.from('posts').delete().eq('id', postId);
   if(error){ toast('❌ ما قدرنا نحذف: ' + error.message); return; }
   toast('🗑️ تم الحذف');
   loadPosts();
 }
 async function deleteConfession(confId){
-  if(!confirm('حذف هذا الاعتراف نهائياً؟')) return;
+  if(!(await showConfirm('حذف الاعتراف', 'حذف هذا الاعتراف نهائياً؟ ما يمكن التراجع.', {icon:'🗑️', okText:'حذف'}))) return;
   const { error } = await sb.from('confessions').delete().eq('id', confId);
   if(error){ toast('❌ ما قدرنا نحذف: ' + error.message); return; }
   toast('🗑️ تم الحذف');
   loadConfessions();
 }
 async function deleteComment(commentId, type, targetId){
-  if(!confirm('حذف هذا التعليق؟')) return;
+  if(!(await showConfirm('حذف التعليق', 'حذف هذا التعليق؟', {icon:'🗑️', okText:'حذف'}))) return;
   const { error } = await sb.from('comments').delete().eq('id', commentId);
   if(error){ toast('❌ ما قدرنا نحذف: ' + error.message); return; }
   if(type === 'post'){
@@ -336,9 +339,9 @@ async function deleteComment(commentId, type, targetId){
 async function editQuote(postId){
   const item = publicPosts.find(p=>p.id===postId);
   if(!item) return;
-  const newText = prompt('عدّل نص الاقتباس:', item.text);
-  if(newText === null || !newText.trim() || newText.trim() === item.text) return;
-  const { error } = await sb.from('posts').update({ text: newText.trim() }).eq('id', postId);
+  const newText = await showConfirm('تعديل الاقتباس', '', {icon:'✏️', okText:'حفظ', danger:false, withInput:true, inputValue:item.text});
+  if(!newText || newText === item.text) return;
+  const { error } = await sb.from('posts').update({ text: newText }).eq('id', postId);
   if(error){ toast('❌ ما قدرنا نحفظ التعديل: ' + error.message); return; }
   toast('✅ تم التعديل');
   loadPosts();
@@ -346,8 +349,9 @@ async function editQuote(postId){
 
 // ================= الإبلاغ والحظر =================
 async function reportContent(type, id){
-  const reason = prompt('وش سبب الإبلاغ؟ (اختياري)') || null;
-  const row = { reporter_id: currentUser.id, reason };
+  const reason = await showConfirm('الإبلاغ عن محتوى', 'وش سبب الإبلاغ؟', {icon:'🚩', okText:'إرسال البلاغ', withInput:true});
+  if(reason === false) return;
+  const row = { reporter_id: currentUser.id, reason: reason || null };
   if(type === 'post') row.post_id = id;
   else if(type === 'confession') row.confession_id = id;
   else if(type === 'comment') row.comment_id = id;
@@ -357,7 +361,7 @@ async function reportContent(type, id){
   toast('✅ تم إرسال البلاغ، شكراً لك');
 }
 async function blockUser(userId){
-  if(!confirm('حظر هذا الشخص؟ ما راح يقدر يراسلك ولا تشوف بعض بالمستقبل بسهولة.')) return;
+  if(!(await showConfirm('حظر هذا الشخص', 'ما راح يقدر يراسلك ولا تشوف بعض بالمستقبل بسهولة.', {icon:'🚫', okText:'حظر'}))) return;
   const { error } = await sb.from('blocks').insert([{ blocker_id: currentUser.id, blocked_id: userId }]);
   if(error){ toast('❌ صار خلل: ' + error.message); return; }
   toast('🚫 تم الحظر');
@@ -390,7 +394,7 @@ async function submitShoutout(){
   const txt = document.getElementById('shoutText').value.trim();
   if(!txt){ toast('اكتب نص الشوت أوت أولاً'); return; }
   if(currentUser.coins < 15){ toast('رصيدك من ASKcoins غير كافٍ'); return; }
-  if(!confirm('بينخصم 15 🪙 من رصيدك وينشر لكل الأعضاء فوراً. متأكد؟')) return;
+  if(!(await showConfirm('نشر شوت أوت', 'بينخصم 15 🪙 من رصيدك وينشر لكل الأعضاء فوراً. متأكد؟', {icon:'📢', okText:'نشر ودفع 15 🪙'}))) return;
   const { error } = await sb.rpc('create_shoutout', { q_text: txt });
   if(error){ toast('❌ ما قدرنا ننشر الشوت أوت: ' + error.message); console.warn(error.message); return; }
   toast('📢 تم نشر الشوت أوت — وصل إشعار لكل الأعضاء');
@@ -621,9 +625,15 @@ async function uploadAvatar(file){
 }
 
 // ================= تشغيل التطبيق =================
+function hideBootLoader(){
+  const el = document.getElementById('bootLoader');
+  if(el) el.classList.add('hide');
+}
+
 async function initApp(){
   if(!supabaseReady){
     document.getElementById('setupNotice').style.display = 'flex';
+    hideBootLoader();
     return;
   }
 
@@ -633,10 +643,11 @@ async function initApp(){
       currentUser = null;
       document.body.classList.remove('app-active');
       document.getElementById('authScreen').style.display = 'flex';
+      hideBootLoader();
     }
   });
 
   const { data: { session } } = await sb.auth.getSession();
   if(session){ bootApp(session); }
-  else { document.getElementById('authScreen').style.display = 'flex'; }
+  else { document.getElementById('authScreen').style.display = 'flex'; hideBootLoader(); }
 }

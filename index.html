@@ -11,6 +11,11 @@
 </head>
 <body>
 
+<div id="bootLoader">
+  <div class="qqc-logo" style="font-size:28px;">QQC</div>
+  <div class="boot-spinner"></div>
+</div>
+
 <div id="setupNotice" style="display:none;">
   <div class="box">
     <h2>الموقع يحتاج إعداد أول مرة</h2>
@@ -69,8 +74,8 @@
 
   <div class="nav-wrap">
     <div class="bottom-nav">
-      <div class="nav-item active" data-tab="profile" onclick="switchTab('profile')"><div class="ic">👤</div><div class="lb">حسابي</div></div>
-      <div class="nav-item" data-tab="questions" onclick="switchTab('questions')"><div class="ic">❓</div><div class="lb">الأسئلة</div></div>
+      <div class="nav-item" data-tab="profile" onclick="switchTab('profile')"><div class="ic">👤</div><div class="lb">حسابي</div></div>
+      <div class="nav-item active" data-tab="questions" onclick="switchTab('questions')"><div class="ic">❓</div><div class="lb">الأسئلة</div></div>
       <div class="nav-item" data-tab="quotes" onclick="switchTab('quotes')"><div class="ic">❝</div><div class="lb">الاقتباسات</div></div>
       <div class="nav-item" data-tab="confessions" onclick="switchTab('confessions')"><div class="ic">🎭</div><div class="lb">الاعترافات</div></div>
       <div class="nav-item" data-tab="messages" onclick="switchTab('messages')"><div class="ic">💬</div><div class="lb">الرسائل</div></div>
@@ -98,8 +103,8 @@
   <div class="d-body">
     <aside class="d-sidebar-left">
       <button class="btn-primary" onclick="openComposer()">+ إنشاء جديد</button>
-      <div class="d-nav-item nav-item active" data-tab="profile" onclick="switchTab('profile')"><span class="ic">👤</span> حسابي</div>
-      <div class="d-nav-item nav-item" data-tab="questions" onclick="switchTab('questions')"><span class="ic">❓</span> الأسئلة</div>
+      <div class="d-nav-item nav-item" data-tab="profile" onclick="switchTab('profile')"><span class="ic">👤</span> حسابي</div>
+      <div class="d-nav-item nav-item active" data-tab="questions" onclick="switchTab('questions')"><span class="ic">❓</span> الأسئلة</div>
       <div class="d-nav-item nav-item" data-tab="quotes" onclick="switchTab('quotes')"><span class="ic">❝</span> الاقتباسات</div>
       <div class="d-nav-item nav-item" data-tab="confessions" onclick="switchTab('confessions')"><span class="ic">🎭</span> الاعترافات</div>
       <div class="d-nav-item nav-item" data-tab="messages" onclick="switchTab('messages')"><span class="ic">💬</span> الرسائل</div>
@@ -117,10 +122,25 @@
 
 <div class="overlay" id="overlay" onclick="closeSheet()"></div>
 
+<!-- نافذة تأكيد مخصصة (تحل محل confirm/prompt المتصفح البدائية) -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+<div class="confirm-modal" id="confirmModal">
+  <div class="confirm-icon" id="confirmIcon">⚠️</div>
+  <div class="confirm-title" id="confirmTitle"></div>
+  <div class="confirm-text" id="confirmText"></div>
+  <div id="confirmInputWrap" style="display:none; margin-top:12px;">
+    <textarea id="confirmInput" rows="2" maxlength="200" placeholder="اكتب هنا (اختياري)..."></textarea>
+  </div>
+  <div class="confirm-actions">
+    <button class="btn-ghost" style="margin-top:0;" onclick="closeModal()">إلغاء</button>
+    <button class="btn-primary" id="confirmOkBtn" style="margin-top:0;">تأكيد</button>
+  </div>
+</div>
+
 <!-- composer sheet -->
 <div class="sheet" id="composerSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title">إنشاء جديد</div>
+  <div class="sheet-title-row"><div class="sheet-title">إنشاء جديد</div><div class="sheet-close" onclick="closeSheet()">✕</div></div>
   <div class="mode-row" id="composerTabs">
     <div class="mode-opt active" data-mode="ask" onclick="setComposerMode('ask')"><span class="ic">❓</span><span class="lb">سؤال</span></div>
     <div class="mode-opt" data-mode="shoutout" onclick="setComposerMode('shoutout')"><span class="ic">📢</span><span class="lb">شوت أوت</span></div>
@@ -131,7 +151,8 @@
   <datalist id="topicDatalist"></datalist>
 
   <div id="composerAskBody">
-    <textarea id="askText" rows="3" maxlength="500" placeholder="اكتب سؤالك هنا... بينشر للجميع، وأي شخص يقدر يجاوب عليه"></textarea>
+    <textarea id="askText" rows="3" maxlength="500" oninput="growAndCount(this)" placeholder="اكتب سؤالك هنا... بينشر للجميع، وأي شخص يقدر يجاوب عليه"></textarea>
+    <div class="char-count" id="askText-count">0/500</div>
     <input type="text" id="askTopic" list="topicDatalist" maxlength="30" placeholder="الفئة (مثال: حب، نجاح...) — اختياري" style="margin-top:8px;">
     <div class="toggle-row">
       <span>سؤال مجهول (ما يظهر اسمك)</span>
@@ -141,19 +162,22 @@
   </div>
 
   <div id="composerShoutBody" style="display:none;">
-    <textarea id="shoutText" rows="3" maxlength="500" placeholder="اكتب سؤال الشوت أوت..."></textarea>
+    <textarea id="shoutText" rows="3" maxlength="500" oninput="growAndCount(this)" placeholder="اكتب سؤال الشوت أوت..."></textarea>
+    <div class="char-count" id="shoutText-count">0/500</div>
     <div class="toggle-row"><span>يكلف — وينبّه كل الأعضاء 📢</span><b style="font-size:12px;color:var(--red)">15 🪙</b></div>
     <button class="btn-primary" onclick="submitShoutout()">نشر الشوت أوت</button>
   </div>
 
   <div id="composerQuoteBody" style="display:none;">
-    <textarea id="quoteText" rows="3" maxlength="500" placeholder="اكتب اقتباساً أو حكمة لمشاركتها..."></textarea>
+    <textarea id="quoteText" rows="3" maxlength="500" oninput="growAndCount(this)" placeholder="اكتب اقتباساً أو حكمة لمشاركتها..."></textarea>
+    <div class="char-count" id="quoteText-count">0/500</div>
     <input type="text" id="quoteTopic" list="topicDatalist" maxlength="30" placeholder="الفئة — اختر موجودة أو اكتب فئة جديدة" style="margin-top:8px;">
     <button class="btn-primary" onclick="submitQuote()">نشر الاقتباس</button>
   </div>
 
   <div id="composerConfessionBody" style="display:none;">
-    <textarea id="confessionText" rows="4" maxlength="1000" placeholder="اكتب اعترافك هنا..."></textarea>
+    <textarea id="confessionText" rows="4" maxlength="1000" oninput="growAndCount(this)" placeholder="اكتب اعترافك هنا..."></textarea>
+    <div class="char-count" id="confessionText-count">0/1000</div>
     <div class="toggle-row">
       <span>اعتراف مجهول (ما يظهر اسمك)</span>
       <div class="toggle on" id="confessionAnonToggle" onclick="this.classList.toggle('on')"><div class="toggle-dot"></div></div>
@@ -165,13 +189,14 @@
 <!-- profile view sheet -->
 <div class="sheet" id="profileSheet">
   <div class="sheet-handle"></div>
+  <div class="sheet-close" style="position:absolute; top:14px; left:14px;" onclick="closeSheet()">✕</div>
   <div id="profileSheetBody"></div>
 </div>
 
 <!-- DM thread sheet -->
 <div class="sheet" id="threadSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title" id="threadTitle">محادثة</div>
+  <div class="sheet-title-row"><div class="sheet-title" id="threadTitle">محادثة</div><div class="sheet-close" onclick="closeSheet()">✕</div></div>
   <div id="threadMessages" style="max-height:46vh; overflow-y:auto; margin-bottom:12px; display:flex; flex-direction:column;"></div>
   <div style="display:flex; gap:8px;">
     <input type="text" id="threadText" maxlength="1000" placeholder="اكتب رسالتك..." style="flex:1;" onkeydown="if(event.key==='Enter') sendMessage()">
@@ -182,25 +207,27 @@
 <!-- share picker sheet -->
 <div class="sheet" id="sharePickerSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title">شارك مع...</div>
+  <div class="sheet-title-row"><div class="sheet-title">شارك مع...</div><div class="sheet-close" onclick="closeSheet()">✕</div></div>
   <div id="sharePickerList"></div>
 </div>
 
 <!-- comments sheet -->
 <div class="sheet" id="commentsSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title">التعليقات</div>
+  <div class="sheet-title-row"><div class="sheet-title">التعليقات</div><div class="sheet-close" onclick="closeSheet()">✕</div></div>
   <div id="commentsList" style="max-height:42vh; overflow-y:auto; margin-bottom:12px;"></div>
-  <textarea id="commentText" rows="2" maxlength="500" placeholder="اكتب تعليقك..."></textarea>
+  <textarea id="commentText" rows="2" maxlength="500" oninput="growAndCount(this)" placeholder="اكتب تعليقك..."></textarea>
+  <div class="char-count" id="commentText-count">0/500</div>
   <button class="btn-primary" onclick="submitComment()">نشر التعليق</button>
 </div>
 
 <!-- answer sheet -->
 <div class="sheet" id="answerSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title">الإجابة على السؤال</div>
+  <div class="sheet-title-row"><div class="sheet-title">الإجابة على السؤال</div><div class="sheet-close" onclick="closeSheet()">✕</div></div>
   <div class="q-bubble" id="answerQuestionPreview"></div>
-  <textarea id="answerText" rows="4" maxlength="1000" placeholder="اكتب إجابتك..."></textarea>
+  <textarea id="answerText" rows="4" maxlength="1000" oninput="growAndCount(this)" placeholder="اكتب إجابتك..."></textarea>
+  <div class="char-count" id="answerText-count">0/1000</div>
   <button class="btn-primary" onclick="submitAnswer()">نشر الإجابة</button>
 </div>
 

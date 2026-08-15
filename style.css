@@ -67,7 +67,7 @@
     width:100%; min-height:100vh; min-height:100dvh; background: linear-gradient(165deg, #EA323C 0%, #D31E29 55%, #B9151F 100%);
     color:var(--on-red); display:flex; flex-direction:column;
   }
-  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px 6px 18px; }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:calc(16px + env(safe-area-inset-top)) 18px 6px 18px; }
   .logo{ display:flex; align-items:center; gap:8px; }
   .logo-mark{
     width:32px;height:32px;border-radius:9px;background:var(--orange);
@@ -87,9 +87,9 @@
   }
   .top-actions{ display:flex; gap:9px; }
 
-  .content{ flex:1; padding:14px 18px 130px 18px; background:var(--paper); border-radius:22px 22px 0 0; margin-top:10px; color:var(--ink); }
+  .content{ flex:1; padding:14px 18px calc(130px + env(safe-area-inset-bottom)) 18px; background:var(--paper); border-radius:22px 22px 0 0; margin-top:10px; color:var(--ink); }
 
-  .nav-wrap{ position:fixed; bottom:16px; left:16px; right:16px; display:flex; align-items:center; gap:10px; z-index:20; max-width:460px; margin:0 auto; }
+  .nav-wrap{ position:fixed; bottom:calc(16px + env(safe-area-inset-bottom)); left:16px; right:16px; display:flex; align-items:center; gap:10px; z-index:20; max-width:460px; margin:0 auto; }
   .bottom-nav{
     flex:1; height:62px; background:var(--paper); border-radius:22px;
     display:flex; align-items:center; justify-content:space-around;
@@ -322,3 +322,66 @@
   .avatar-tiny{ width:18px !important; height:18px !important; font-size:9px !important; flex-shrink:0; }
   #threadMessages{ padding:4px; }
   #sharePickerList .inbox-item:hover, #threadSheet .inbox-item:hover{ opacity:0.85; }
+
+  /* ================= شاشة تحميل البداية ================= */
+  #bootLoader{
+    position:fixed; inset:0; z-index:500; background: linear-gradient(165deg, #EA323C 0%, #D31E29 55%, #B9151F 100%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; color:#fff;
+    transition:opacity .35s ease, visibility .35s ease;
+  }
+  #bootLoader.hide{ opacity:0; visibility:hidden; pointer-events:none; }
+  .boot-spinner{
+    width:30px; height:30px; border-radius:50%; border:3px solid rgba(255,255,255,0.25); border-top-color:#fff;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* ================= نافذة تأكيد مخصصة ================= */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(20,4,6,0.6); z-index:200; opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .modal-overlay.show{ opacity:1; pointer-events:all; }
+  .confirm-modal{
+    position:fixed; left:50%; top:50%; transform:translate(-50%,-50%) scale(0.94); width:min(340px, 88vw);
+    background:var(--paper); border-radius:20px; padding:26px 22px 20px 22px; z-index:201; text-align:center;
+    opacity:0; pointer-events:none; transition:transform .2s, opacity .2s; box-shadow:0 24px 50px rgba(0,0,0,0.3);
+  }
+  .confirm-modal.show{ opacity:1; pointer-events:all; transform:translate(-50%,-50%) scale(1); }
+  .confirm-icon{ font-size:32px; margin-bottom:10px; }
+  .confirm-title{ font-family:'El Messiri',sans-serif; font-weight:700; font-size:15.5px; color:var(--ink); margin-bottom:6px; }
+  .confirm-text{ font-size:12.5px; color:var(--ink-muted); line-height:1.6; }
+  .confirm-actions{ display:flex; gap:10px; margin-top:18px; }
+  .confirm-actions button{ flex:1; }
+
+  /* ================= إغلاق الشيتات ================= */
+  .sheet-title-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .sheet-title-row .sheet-title{ margin-bottom:0; }
+  .sheet-close{
+    width:28px; height:28px; border-radius:50%; background:var(--paper-soft); color:var(--ink-muted);
+    display:flex; align-items:center; justify-content:center; font-size:13px; cursor:pointer; flex-shrink:0;
+  }
+  .sheet-close:active{ transform:scale(0.9); }
+
+  /* ================= عداد الأحرف ================= */
+  .char-count{ font-size:10px; color:var(--ink-muted); text-align:left; margin-top:3px; }
+  .char-count.warn{ color:var(--orange); }
+  .char-count.max{ color:var(--red); font-weight:700; }
+
+  /* ================= حركة اللايك ================= */
+  @keyframes heartPop{
+    0%{ transform:scale(1); }
+    35%{ transform:scale(1.35); }
+    60%{ transform:scale(0.92); }
+    100%{ transform:scale(1); }
+  }
+  .heart-pop{ animation: heartPop .35s ease; display:inline-block; }
+
+  /* ================= تحسين شكل التوست ================= */
+  .toast{ display:flex; align-items:center; gap:8px; }
+  .toast .toast-ic{ font-size:15px; flex-shrink:0; }
+
+  /* ================= تحميل هيكلي (Skeleton) ================= */
+  .skeleton{ background:linear-gradient(90deg, var(--paper-soft) 25%, #FBE3E1 37%, var(--paper-soft) 63%); background-size:400% 100%; animation: skeletonShine 1.4s ease infinite; border-radius:10px; }
+  @keyframes skeletonShine{ 0%{ background-position:100% 50%; } 100%{ background-position:0 50%; } }
+  .skel-card{ background:var(--paper); border:1.5px solid var(--line-on-white); border-radius:16px; padding:15px; margin-bottom:12px; }
+  .skel-line{ height:11px; margin-bottom:8px; }

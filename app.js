@@ -1,9 +1,63 @@
 // ================= أدوات عامة =================
 function toast(msg){
   const t = document.getElementById('toast');
-  t.innerHTML = msg;
+  t.innerHTML = `<span>${msg}</span>`;
   t.classList.add('show');
-  setTimeout(()=> t.classList.remove('show'), 1800);
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(()=> t.classList.remove('show'), 2600);
+}
+// يكبّر مربع النص تلقائياً مع الكتابة، ويحدّث عداد الأحرف تحته
+function growAndCount(el){
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 260) + 'px';
+  const counter = document.getElementById(el.id + '-count');
+  if(counter){
+    const max = parseInt(el.getAttribute('maxlength')) || 0;
+    const len = el.value.length;
+    counter.textContent = `${len}/${max}`;
+    counter.classList.toggle('warn', max>0 && len > max*0.85 && len <= max);
+    counter.classList.toggle('max', max>0 && len >= max);
+  }
+}
+
+// ================= نافذة تأكيد مخصصة (تحل محل confirm/prompt المتصفح) =================
+let _modalResolve = null;
+function showConfirm(title, text, opts){
+  opts = opts || {};
+  return new Promise(resolve=>{
+    _modalResolve = resolve;
+    document.getElementById('confirmIcon').textContent = opts.icon || '⚠️';
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmText').textContent = text || '';
+    document.getElementById('confirmOkBtn').textContent = opts.okText || 'تأكيد';
+    document.getElementById('confirmOkBtn').style.background = opts.danger === false ? 'var(--ink)' : 'var(--red)';
+    const inputWrap = document.getElementById('confirmInputWrap');
+    const input = document.getElementById('confirmInput');
+    inputWrap.style.display = opts.withInput ? 'block' : 'none';
+    input.value = opts.inputValue || '';
+    input.placeholder = opts.inputPlaceholder || 'اكتب هنا (اختياري)...';
+    document.getElementById('confirmOkBtn').onclick = () => {
+      const val = opts.withInput ? input.value.trim() : true;
+      _closeModalInternal();
+      resolve(val);
+    };
+    document.getElementById('modalOverlay').classList.add('show');
+    document.getElementById('confirmModal').classList.add('show');
+  });
+}
+function closeModal(){
+  _closeModalInternal();
+  if(_modalResolve) _modalResolve(false);
+}
+function _closeModalInternal(){
+  document.getElementById('modalOverlay').classList.remove('show');
+  document.getElementById('confirmModal').classList.remove('show');
+}
+
+// يشغّل حركة نبض القلب فوراً عند الضغط، بدون انتظار الشبكة
+function popHeart(el){
+  el.classList.add('heart-pop');
+  setTimeout(()=> el.classList.remove('heart-pop'), 350);
 }
 function timeAgo(iso){
   if(!iso) return '';
@@ -179,7 +233,7 @@ function renderQATile(it){
           جاوب عليه: <b style="color:var(--ink);">${esc(it.answered_by_name)}</b>
         </div>
         <div class="card-foot">
-          <div class="foot-btn ${liked?'liked':''}" onclick="toggleLike('${it.id}')">♥ <span>${it.likes}</span></div>
+          <div class="foot-btn ${liked?'liked':''}" onclick="popHeart(this); toggleLike('${it.id}')">♥ <span>${it.likes}</span></div>
           <div class="foot-btn" onclick="openComments('post','${it.id}')">💬 <span>${it.comments||0}</span></div>
           <div class="foot-btn" onclick="openSharePicker('${b64(it.q+' — '+it.a)}')">📤 مشاركة</div>
           ${isOwner ? `<div class="foot-btn" onclick="deletePost('${it.id}')">🗑️</div>` : `<div class="foot-btn" onclick="reportContent('post','${it.id}')">🚩</div>`}
@@ -223,7 +277,7 @@ function renderTile(item){
       <div class="tile-name" ${up(item.anon?null:item.author_id)}>${item.anon ? 'مجهول' : esc(item.author_name)}</div>
       <div class="tile-content quote">${esc(item.text)}</div>
       <div class="tile-foot">
-        <div class="t-like ${liked?'liked':''}" onclick="toggleLike('${item.id}')">♥ ${item.likes}</div>
+        <div class="t-like ${liked?'liked':''}" onclick="popHeart(this); toggleLike('${item.id}')">♥ ${item.likes}</div>
         <div onclick="openComments('post','${item.id}')" style="cursor:pointer;">💬 ${item.comments||0}</div>
         <div onclick="openSharePicker('${b64(item.text)}')" style="cursor:pointer;">📤</div>
         ${isOwner
@@ -315,7 +369,7 @@ function renderConfessions(){
           </div>
           <div class="conf-text">${esc(c.text)}</div>
           <div class="card-foot" style="margin-top:10px;">
-            <div class="foot-btn ${liked?'liked':''}" onclick="toggleConfessionLike('${c.id}')">♥ <span>${c.likes}</span></div>
+            <div class="foot-btn ${liked?'liked':''}" onclick="popHeart(this); toggleConfessionLike('${c.id}')">♥ <span>${c.likes}</span></div>
             <div class="foot-btn" onclick="openComments('confession','${c.id}')">💬 <span>${c.comments||0}</span></div>
             <div class="foot-btn" onclick="openSharePicker('${b64(c.text)}')">📤 مشاركة</div>
             ${isOwner ? `<div class="foot-btn" onclick="deleteConfession('${c.id}')">🗑️</div>` : `<div class="foot-btn" onclick="reportContent('confession','${c.id}')">🚩</div>`}
