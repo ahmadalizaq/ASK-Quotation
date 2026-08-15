@@ -61,7 +61,14 @@
     <div class="auth-switch" style="margin-top:6px;">
       <a onclick="requestPasswordReset()">نسيت كلمة المرور؟</a>
     </div>
+    <div class="guest-divider"><span>أو</span></div>
+    <button class="btn-ghost" style="margin-top:0;" onclick="continueAsGuest()">👀 تصفح كزائر بدون تسجيل</button>
   </div>
+</div>
+
+<div class="guest-banner" id="guestBanner" style="display:none;">
+  <span>👀 تتصفح كزائر — تقدر تشوف كل شي، بس تحتاج حساب عشان تتفاعل</span>
+  <button onclick="promptGuestLogin()">تسجيل الدخول</button>
 </div>
 
 <!-- ===================== MOBILE APP ===================== -->

@@ -1,5 +1,7 @@
 // ================= الحالة العامة (state) =================
 let currentUser = null;      // { id, name, initials, coins, vip }
+let isGuest = false;         // true إذا داخل يتصفح بدون تسجيل (زائر)
+const GUEST_USER = { id:null, name:'زائر', initials:'ز', coins:0, vip:false, avatar_url:null, bio:null, is_admin:false };
 let currentTab = 'questions';
 let publicPosts = [];        // منشورات من نوع 'quote' و 'qa'
 let confessions = [];
@@ -103,6 +105,15 @@ async function requestPasswordReset(){
 }
 
 async function logout(){
+  if(isGuest){
+    isGuest = false;
+    currentUser = null;
+    document.body.classList.remove('app-active');
+    const banner = document.getElementById('guestBanner');
+    if(banner) banner.style.display = 'none';
+    document.getElementById('authScreen').style.display = 'flex';
+    return;
+  }
   await sb.auth.signOut();
   currentUser = null;
   document.body.classList.remove('app-active');
@@ -133,6 +144,54 @@ async function bootApp(session){
   render();
   subscribeRealtime();
   hideBootLoader();
+}
+
+// ================= وضع الزائر (تصفح كامل بدون حساب، بدون تفاعل) =================
+// الزائر يقدر يشوف كل الأسئلة/الاقتباسات/الاعترافات/التعليقات/الحسابات،
+// بس أي محاولة تفاعل (سؤال/إجابة/لايك/تعليق/متابعة/رسالة...) تفتحله شاشة تسجيل الدخول.
+async function continueAsGuest(){
+  isGuest = true;
+  currentUser = { ...GUEST_USER };
+  document.getElementById('authScreen').style.display = 'none';
+  document.body.classList.add('app-active');
+  const banner = document.getElementById('guestBanner');
+  if(banner) banner.style.display = 'flex';
+
+  await Promise.all([loadPosts(), loadConfessions(), loadPeople(), loadFeatured()]);
+  render();
+  subscribeRealtimeGuest();
+  hideBootLoader();
+}
+
+// يفتح شاشة تسجيل الدخول من وضع الزائر (يُستدعى من بانر الزائر أو من requireLogin)
+function promptGuestLogin(){
+  closeSheet();
+  isGuest = false;
+  currentUser = null;
+  document.body.classList.remove('app-active');
+  const banner = document.getElementById('guestBanner');
+  if(banner) banner.style.display = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+}
+
+// يُستدعى بأول سطر بأي دالة/زر يحتاج حساب حقيقي — يرجع true لو لازم نوقف التنفيذ (زائر)
+function requireLogin(){
+  if(isGuest){
+    toast('🔒 سجّل دخولك أو أنشئ حساب عشان تقدر تسوي هذا');
+    promptGuestLogin();
+    return true;
+  }
+  return false;
+}
+
+// ريل تايم محدود للزائر (بدون قنوات الإشعارات/الرسائل الخاصة بحساب معين)
+function subscribeRealtimeGuest(){
+  sb.channel('posts-changes-guest').on('postgres_changes', { event:'*', schema:'public', table:'posts' }, () => loadPosts()).subscribe();
+  sb.channel('confessions-changes-guest').on('postgres_changes', { event:'*', schema:'public', table:'confessions' }, () => loadConfessions()).subscribe();
+  sb.channel('answers-changes-guest').on('postgres_changes', { event:'*', schema:'public', table:'answers' }, async () => {
+    await loadAnswers();
+    renderAllAnswersList();
+  }).subscribe();
 }
 
 // ================= تحميل البيانات =================
@@ -179,7 +238,9 @@ async function loadNotifications(){
 }
 async function loadPeople(){
   if(!currentUser) return;
-  const { data, error } = await sb.from('profiles').select('id,name,initials,vip,avatar_url').neq('id', currentUser.id).limit(20);
+  let q = sb.from('profiles').select('id,name,initials,vip,avatar_url').limit(20);
+  if(currentUser.id) q = q.neq('id', currentUser.id); // الزائر ما له id حقيقي، نجيب الكل
+  const { data, error } = await q;
   if(error){ console.warn('people load error:', error.message); return; }
   peopleDirectory = data || [];
 }
@@ -253,6 +314,7 @@ async function pushNotification(userId, text, meta={}){
 
 // ================= التفاعلات (لايك / متابعة / VIP) =================
 async function toggleLike(postId){
+  if(requireLogin()) return;
   const item = publicPosts.find(p=>p.id===postId);
   if(!item) return;
   const alreadyLiked = myLikedPostIds.has(postId);
@@ -278,6 +340,7 @@ async function loadMyProfileCoins(){
   if(data){ currentUser.coins = data.coins; render(); }
 }
 async function toggleConfessionLike(confId){
+  if(requireLogin()) return;
   const item = confessions.find(c=>c.id===confId);
   if(!item) return;
   const alreadyLiked = myLikedConfessionIds.has(confId);
@@ -295,6 +358,7 @@ async function toggleConfessionLike(confId){
   render();
 }
 async function toggleFollow(targetId){
+  if(requireLogin()) return;
   if(followingIds.has(targetId)){
     followingIds.delete(targetId);
     await sb.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', targetId);
@@ -308,6 +372,7 @@ async function toggleFollow(targetId){
   render();
 }
 async function editMyBio(){
+  if(requireLogin()) return;
   const newBio = await showConfirm('نبذتك التعريفية', '', {icon:'✍️', okText:'حفظ', danger:false, withInput:true, inputValue: currentUser.bio || '', inputPlaceholder:'اكتب نبذة قصيرة عنك...'});
   if(newBio === false) return;
   const { error } = await sb.from('profiles').update({ bio: newBio || null }).eq('id', currentUser.id);
@@ -318,6 +383,7 @@ async function editMyBio(){
 }
 
 async function upgradeVip(){
+  if(requireLogin()) return;
   const { error } = await sb.from('profiles').update({vip:true}).eq('id', currentUser.id);
   if(error){ toast('صار خلل، حاول مرة ثانية'); return; }
   currentUser.vip = true;
@@ -327,6 +393,7 @@ async function upgradeVip(){
 
 // ================= منطقة المطور =================
 async function wipeAllData(){
+  if(requireLogin()) return;
   const typed = await showConfirm(
     'حذف كل الحسابات والمحتوى',
     'هذا يمسح نهائياً كل الحسابات (غير حسابك) وكل الأسئلة والاقتباسات والاعترافات. ما فيه رجعة. اكتب "حذف" بالضبط للتأكيد.',
@@ -345,6 +412,7 @@ async function wipeAllData(){
 }
 
 async function deleteMyAccount(){
+  if(requireLogin()) return;
   const step1 = await showConfirm('حذف الحساب نهائياً', 'هذا حذف نهائي لحسابك وكل محتواك — ما يرجع بعدها.', {icon:'⚠️', okText:'متابعة'});
   if(!step1) return;
   const step2 = await showConfirm('تأكيد أخير', 'بيتحذف حسابك الآن للأبد. أكيد تماماً؟', {icon:'🗑️', okText:'احذف حسابي'});
@@ -359,6 +427,7 @@ async function deleteMyAccount(){
 
 // ================= تعديل/حذف المحتوى الخاص بك =================
 async function deletePost(postId){
+  if(requireLogin()) return;
   if(!(await showConfirm('حذف المنشور', 'حذف هذا المنشور نهائياً؟ ما يمكن التراجع.', {icon:'🗑️', okText:'حذف'}))) return;
   const { error } = await sb.from('posts').delete().eq('id', postId);
   if(error){ toast('❌ ما قدرنا نحذف: ' + error.message); return; }
@@ -366,6 +435,7 @@ async function deletePost(postId){
   loadPosts();
 }
 async function deleteConfession(confId){
+  if(requireLogin()) return;
   if(!(await showConfirm('حذف الاعتراف', 'حذف هذا الاعتراف نهائياً؟ ما يمكن التراجع.', {icon:'🗑️', okText:'حذف'}))) return;
   const { error } = await sb.from('confessions').delete().eq('id', confId);
   if(error){ toast('❌ ما قدرنا نحذف: ' + error.message); return; }
@@ -373,6 +443,7 @@ async function deleteConfession(confId){
   loadConfessions();
 }
 async function deleteComment(commentId, type, targetId){
+  if(requireLogin()) return;
   if(!(await showConfirm('حذف التعليق', 'حذف هذا التعليق؟', {icon:'🗑️', okText:'حذف'}))) return;
   const { error } = await sb.from('comments').delete().eq('id', commentId);
   if(error){ toast('❌ ما قدرنا نحذف: ' + error.message); return; }
@@ -387,6 +458,7 @@ async function deleteComment(commentId, type, targetId){
   openComments(type, targetId);
 }
 async function editQuote(postId){
+  if(requireLogin()) return;
   const item = publicPosts.find(p=>p.id===postId);
   if(!item) return;
   const newText = await showConfirm('تعديل الاقتباس', '', {icon:'✏️', okText:'حفظ', danger:false, withInput:true, inputValue:item.text});
@@ -399,6 +471,7 @@ async function editQuote(postId){
 
 // ================= الإبلاغ والحظر =================
 async function reportContent(type, id){
+  if(requireLogin()) return;
   const reason = await showConfirm('الإبلاغ عن محتوى', 'وش سبب الإبلاغ؟', {icon:'🚩', okText:'إرسال البلاغ', withInput:true});
   if(reason === false) return;
   const row = { reporter_id: currentUser.id, reason: reason || null };
@@ -412,6 +485,7 @@ async function reportContent(type, id){
   toast('✅ تم إرسال البلاغ، شكراً لك');
 }
 async function blockUser(userId){
+  if(requireLogin()) return;
   if(!(await showConfirm('حظر هذا الشخص', 'ما راح يقدر يراسلك ولا تشوف بعض بالمستقبل بسهولة.', {icon:'🚫', okText:'حظر'}))) return;
   const { error } = await sb.from('blocks').insert([{ blocker_id: currentUser.id, blocked_id: userId }]);
   if(error){ toast('❌ صار خلل: ' + error.message); return; }
@@ -421,6 +495,7 @@ async function blockUser(userId){
 
 // ================= إنشاء المحتوى (composer) =================
 async function submitAsk(){
+  if(requireLogin()) return;
   const txt = document.getElementById('askText').value.trim();
   if(!txt){ toast('اكتب سؤالاً أولاً'); return; }
   const anon = document.getElementById('anonToggle').classList.contains('on');
@@ -442,6 +517,7 @@ async function submitAsk(){
   await loadMyProfileCoins();
 }
 async function submitShoutout(){
+  if(requireLogin()) return;
   const txt = document.getElementById('shoutText').value.trim();
   if(!txt){ toast('اكتب نص الشوت أوت أولاً'); return; }
   if(currentUser.coins < 15){ toast('رصيدك من ASKcoins غير كافٍ'); return; }
@@ -455,6 +531,7 @@ async function submitShoutout(){
   await loadMyProfileCoins();
 }
 async function submitQuote(){
+  if(requireLogin()) return;
   const txt = document.getElementById('quoteText').value.trim();
   if(!txt){ toast('اكتب الاقتباس أولاً'); return; }
   const topicEl = document.getElementById('quoteTopic');
@@ -472,6 +549,7 @@ async function submitQuote(){
   loadPosts();
 }
 async function submitConfession(){
+  if(requireLogin()) return;
   const txt = document.getElementById('confessionText').value.trim();
   if(!txt){ toast('اكتب اعترافك أولاً'); return; }
   const anon = document.getElementById('confessionAnonToggle').classList.contains('on');
@@ -490,6 +568,7 @@ async function submitConfession(){
   loadConfessions();
 }
 async function submitAnswer(){
+  if(requireLogin()) return;
   const txt = document.getElementById('answerText').value.trim();
   if(!txt || !activeQuestion){ toast('اكتب إجابة أولاً'); return; }
   const { error } = await sb.from('answers').insert([{
@@ -540,6 +619,7 @@ function renderAllAnswersList(){
   `).join('');
 }
 async function deleteAnswer(answerId, postId){
+  if(requireLogin()) return;
   if(!(await showConfirm('حذف الإجابة', 'حذف هذه الإجابة؟', {icon:'🗑️', okText:'حذف'}))) return;
   const { error } = await sb.from('answers').delete().eq('id', answerId);
   if(error){ toast('❌ ما قدرنا نحذف: ' + error.message); return; }
@@ -608,12 +688,14 @@ async function loadThread(userId, userInfo){
   renderThread();
 }
 async function openThread(userId, encodedName, initials, avatar){
+  if(requireLogin()) return;
   const name = unb64(encodedName);
   await loadThread(userId, { name, initials, avatar });
   document.getElementById('overlay').classList.add('show');
   document.getElementById('threadSheet').classList.add('show');
 }
 async function sendMessage(){
+  if(requireLogin()) return;
   const el = document.getElementById('threadText');
   const txt = el.value.trim();
   if(!txt || !activeThreadUserId) return;
@@ -627,12 +709,14 @@ async function sendMessage(){
 
 // ---- مشاركة عبر الرسائل ----
 function openSharePicker(encodedText){
+  if(requireLogin()) return;
   shareText = unb64(encodedText);
   renderSharePicker();
   document.getElementById('overlay').classList.add('show');
   document.getElementById('sharePickerSheet').classList.add('show');
 }
 async function shareToPerson(userId){
+  if(requireLogin()) return;
   if(!shareText || !userId) return;
   const { error } = await sb.from('messages').insert([{ from_id:currentUser.id, to_id:userId, text: shareText }]);
   if(error){ toast('❌ ما قدرنا نشارك: ' + error.message); return; }
@@ -697,6 +781,7 @@ function renderCommentsList(){
   `).join('');
 }
 async function submitComment(){
+  if(requireLogin()) return;
   const txt = document.getElementById('commentText').value.trim();
   if(!txt){ toast('اكتب تعليقاً أولاً'); return; }
   if(!activeCommentTarget) return;
@@ -723,6 +808,7 @@ async function submitComment(){
 
 // ================= الصورة الشخصية =================
 async function uploadAvatar(file){
+  if(requireLogin()) return;
   if(!file || !currentUser) return;
   if(!file.type || !file.type.startsWith('image/')){ toast('❌ لازم تختار صورة'); return; }
   if(file.size > 5 * 1024 * 1024){ toast('❌ حجم الصورة كبير — الحد الأقصى 5 ميجا'); return; }

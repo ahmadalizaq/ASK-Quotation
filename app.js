@@ -98,6 +98,7 @@ function renderNotifBadge(){
   });
 }
 function toggleNotifPanel(){
+  if(requireLogin()) return;
   notifPanelOpen = !notifPanelOpen;
   const panel = document.getElementById('notifPanel');
   panel.classList.toggle('show', notifPanelOpen);
@@ -149,7 +150,7 @@ function up(userId){
 function render(){
   if(!currentUser) return;
   let html = '';
-  if(currentTab === 'profile') html = renderProfile();
+  if(currentTab === 'profile') html = isGuest ? renderGuestProfile() : renderProfile();
   else if(currentTab === 'questions') html = renderQuestions();
   else if(currentTab === 'quotes') html = renderQuotesPage();
   else if(currentTab === 'confessions') html = renderConfessions();
@@ -165,6 +166,7 @@ function render(){
 }
 
 function switchTab(tab){
+  if(tab === 'messages' && requireLogin()) return;
   currentTab = tab;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.tab === tab));
   if(tab === 'quotes') loadFeatured();
@@ -472,6 +474,22 @@ function renderConfessions(){
   `;
 }
 
+// ---- صفحة الحساب (زائر) ----
+function renderGuestProfile(){
+  return `
+    <div class="profile-cover"></div>
+    <div class="profile-header">
+      <div class="profile-avatar" style="position:relative;">👤</div>
+      <div class="profile-name">تتصفح كزائر</div>
+      <div class="muted" style="font-size:12px; margin-top:4px; max-width:280px; margin-inline:auto;">
+        تقدر تشوف كل الأسئلة والاقتباسات والاعترافات، بس عشان تسأل أو تجاوب أو تلايك أو تتابع أو ترسل — لازم حساب حقيقي.
+      </div>
+      <button class="btn-primary" style="width:auto; padding:10px 26px; margin-top:14px;" onclick="promptGuestLogin()">تسجيل الدخول / إنشاء حساب</button>
+    </div>
+    <div class="hint" style="margin-top:22px;">حسابك حقيقي ومحفوظ بقاعدة بيانات — يبدأ رصيدك 50 🪙، وتسجل دخولك من أي جهاز وتلقى نفس بياناتك.</div>
+  `;
+}
+
 // ---- صفحة الحساب ----
 function renderProfile(){
   const myOpenQuestions = publicPosts.filter(p=>p.type==='qa' && !(answersByPost[p.id]&&answersByPost[p.id].length) && p.asked_by===currentUser.id);
@@ -725,6 +743,7 @@ async function nativeShare(encodedText){
 
 // ================= نافذة الإنشاء (composer) =================
 function openComposer(){
+  if(requireLogin()) return;
   document.getElementById('overlay').classList.add('show');
   document.getElementById('composerSheet').classList.add('show');
 }
@@ -751,6 +770,7 @@ function setComposerMode(mode){
 
 // ================= الإجابة على سؤال =================
 function openAnswer(postId){
+  if(requireLogin()) return;
   activeQuestion = publicPosts.find(p=>p.id===postId);
   if(!activeQuestion) return;
   document.getElementById('answerQuestionPreview').textContent = activeQuestion.q;
