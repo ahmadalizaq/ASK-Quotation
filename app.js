@@ -129,6 +129,9 @@ function openNotificationAt(i){
   if(n.post_id){
     const post = publicPosts.find(p => p.id === n.post_id);
     switchTab(post && post.type === 'quote' ? 'quotes' : 'questions');
+    if(n.type === 'answer' && post && post.type === 'qa'){
+      setTimeout(()=> openAllAnswers(post.id), 250);
+    }
   } else if(n.confession_id){
     switchTab('confessions');
   }
@@ -212,7 +215,7 @@ function onGlobalSearch(val){
   const quotes = publicPosts.filter(p => p.type==='quote' &&
     ((p.text||'').includes(term) || (!p.anon && (p.author_name||'').includes(term))));
   const questions = publicPosts.filter(p => p.type==='qa' &&
-    ((p.q||'').includes(term) || (p.a||'').includes(term) || (!p.anon && (p.asker_name||'').includes(term))));
+    ((p.q||'').includes(term) || (answersByPost[p.id]||[]).some(a=>(a.text||'').includes(term)) || (!p.anon && (p.asker_name||'').includes(term))));
   const confs = confessions.filter(c => (c.text||'').includes(term));
   const people = peopleDirectory.filter(p => (p.name||'').includes(term));
 
@@ -279,7 +282,28 @@ function renderQuestions(){
 function renderQATile(it){
   const liked = myLikedPostIds.has(it.id);
   const isOwner = it.asked_by === currentUser.id;
-  if(it.a){
+  const answers = answersByPost[it.id] || [];
+  const hasAnswers = answers.length > 0;
+  const shown = answers.slice(0, 3);
+
+  const answersHtml = hasAnswers ? `
+    <div class="answers-list">
+      ${shown.map(a => `
+        <div class="comment-item" style="padding:8px 2px;">
+          <span ${up(a.user_id)}>${avatarHtml(a.user_avatar, a.user_initials, 'avatar-tiny')}</span>
+          <div class="comment-body">
+            <b ${up(a.user_id)} style="font-size:12px;">${esc(a.user_name) || 'مستخدم'}</b>
+            <div class="ctext">${esc(a.text)}</div>
+          </div>
+        </div>
+      `).join('')}
+      ${answers.length > 3
+        ? `<div class="answers-viewall" onclick="openAllAnswers('${it.id}')">مشاهدة كل الإجابات (${answers.length}) ←</div>`
+        : (answers.length > 1 ? `<div class="answers-viewall" onclick="openAllAnswers('${it.id}')">عرض الكل</div>` : '')}
+    </div>
+  ` : '';
+
+  if(hasAnswers){
     return `
       <div class="card">
         <div class="card-head">
@@ -290,16 +314,16 @@ function renderQATile(it){
           </div>
         </div>
         <div class="q-bubble">${esc(it.q)}</div>
-        <div class="a-text">${esc(it.a)}</div>
-        <div class="muted" style="font-size:10.5px; margin:-4px 0 9px 0; display:flex; align-items:center; gap:6px;" ${up(it.answered_by)}>
-          ${avatarHtml(it.answered_by_avatar, it.answered_by_initials, 'avatar-tiny')}
-          جاوب عليه: <b style="color:var(--ink);">${esc(it.answered_by_name)}</b>
+        ${answersHtml}
+        <div style="display:flex; gap:8px; margin-bottom:4px;">
+          <button class="btn-ghost" style="margin-top:2px; width:auto; padding:0 16px; font-size:12px;" onclick="openAnswer('${it.id}')">➕ أضف إجابتك</button>
+          ${isOwner ? `<button class="btn-ghost" style="margin-top:2px; width:auto; padding:0 16px; font-size:12px;" onclick="deletePost('${it.id}')">حذف</button>` : ''}
         </div>
         <div class="card-foot">
           <div class="foot-btn ${liked?'liked':''}"><span onclick="popHeart(this); toggleLike('${it.id}')">♥</span> <span onclick="openLikers('post','${it.id}')" style="cursor:pointer;">${it.likes}</span></div>
           <div class="foot-btn" onclick="openComments('post','${it.id}')">💬 <span>${it.comments||0}</span></div>
-          <div class="foot-btn" onclick="openSharePicker('${b64(it.q+' — '+it.a)}')">📤 مشاركة</div>
-          <div class="foot-btn" onclick="nativeShare('${b64(it.q+' — '+it.a)}')">🔗</div>
+          <div class="foot-btn" onclick="openSharePicker('${b64(it.q+' — '+shown[0].text)}')">📤 مشاركة</div>
+          <div class="foot-btn" onclick="nativeShare('${b64(it.q+' — '+shown[0].text)}')">🔗</div>
           ${isOwner ? `<div class="foot-btn" onclick="deletePost('${it.id}')">🗑️</div>` : `<div class="foot-btn" onclick="reportContent('post','${it.id}')">🚩</div>`}
         </div>
       </div>
@@ -450,7 +474,8 @@ function renderConfessions(){
 
 // ---- صفحة الحساب ----
 function renderProfile(){
-  const myOpenQuestions = publicPosts.filter(p=>p.type==='qa' && !p.a && p.asked_by===currentUser.id);
+  const myOpenQuestions = publicPosts.filter(p=>p.type==='qa' && !(answersByPost[p.id]&&answersByPost[p.id].length) && p.asked_by===currentUser.id);
+  const myAnswersCount = Object.values(answersByPost).reduce((sum,arr)=> sum + arr.filter(a=>a.user_id===currentUser.id).length, 0);
   return `
     <div class="profile-cover"></div>
     <div class="profile-header">
@@ -467,7 +492,7 @@ function renderProfile(){
     </div>
 
     <div class="stat-card">
-      <div><b>${publicPosts.filter(p=>p.answered_by===currentUser.id || p.author_id===currentUser.id).length}</b><span>مساهمة</span></div>
+      <div><b>${publicPosts.filter(p=>p.author_id===currentUser.id).length + myAnswersCount}</b><span>مساهمة</span></div>
       <div><b>${followingIds.size}</b><span>تتابع</span></div>
       <div><b>${currentUser.coins}</b><span>🪙 عملات</span></div>
     </div>
@@ -555,7 +580,7 @@ function renderProfileSheet(p, info){
         <div class="dot" style="background:${q.anon?'var(--ink-muted)':'var(--red)'};"></div>
         <div style="flex:1;">
           <div style="font-size:12px; line-height:1.4; color:var(--ink);">${esc(q.q)}${q.anon ? ' <span class="muted" style="font-size:9.5px;">(مجهول — يظهر لك بس)</span>' : ''}</div>
-          <div class="muted" style="font-size:9.5px; margin-top:2px;">${q.a ? 'متجاوب عليه' : 'بانتظار إجابة'} — ${timeAgo(q.created_at)}</div>
+          <div class="muted" style="font-size:9.5px; margin-top:2px;">${q.answersCount ? `متجاوب عليه (${q.answersCount})` : 'بانتظار إجابة'} — ${timeAgo(q.created_at)}</div>
         </div>
       </div>
     `).join('');

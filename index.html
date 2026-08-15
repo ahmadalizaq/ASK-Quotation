@@ -253,6 +253,15 @@
   <button class="btn-primary" onclick="submitAnswer()">نشر الإجابة</button>
 </div>
 
+<!-- كل الإجابات على سؤال -->
+<div class="sheet" id="allAnswersSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title-row"><div class="sheet-title">كل الإجابات</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
+  <div class="q-bubble" id="allAnswersQuestionPreview"></div>
+  <div id="allAnswersList" style="max-height:42vh; overflow-y:auto; margin:10px 0 14px 0;"></div>
+  <button class="btn-primary" onclick="closeSheet(); openAnswer(activeAnswersQuestion.id)">➕ أضف إجابتك</button>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="config.js"></script>

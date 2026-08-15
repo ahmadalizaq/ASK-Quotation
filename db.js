@@ -27,6 +27,8 @@ let exploreTopic = 'الكل';
 let exploreSearchTerm = '';
 let composerMode = 'ask';
 let activeQuestion = null;
+let answersByPost = {}; // { post_id: [ {id,post_id,user_id,user_name,user_initials,user_avatar,text,created_at}, ... ] }
+let activeAnswersQuestion = null; // السؤال المفتوح حالياً بنافذة "كل الإجابات"
 let authMode = 'login';
 let notifPanelOpen = false;
 
@@ -139,6 +141,21 @@ async function loadPosts(){
   if(error){ console.warn('posts load error:', error.message); return; }
   publicPosts = data || [];
   render();
+  await loadAnswers();
+}
+// كل الإجابات على الأسئلة المعروضة حالياً — إجابة واحدة تصير صف مستقل، متل التعليقات بالضبط
+async function loadAnswers(){
+  const qaIds = publicPosts.filter(p=>p.type==='qa').map(p=>p.id);
+  if(!qaIds.length){ answersByPost = {}; render(); return; }
+  const { data, error } = await sb.from('answers').select('*').in('post_id', qaIds).order('created_at', { ascending:true });
+  if(error){ console.warn('answers load error:', error.message); return; }
+  const map = {};
+  (data || []).forEach(a => {
+    if(!map[a.post_id]) map[a.post_id] = [];
+    map[a.post_id].push(a);
+  });
+  answersByPost = map;
+  render();
 }
 async function loadConfessions(){
   const { data, error } = await sb.from('confessions_feed').select('*').order('created_at', { ascending:false }).limit(100);
@@ -207,6 +224,10 @@ async function loadConversations(){
 function subscribeRealtime(){
   sb.channel('posts-changes').on('postgres_changes', { event:'*', schema:'public', table:'posts' }, () => loadPosts()).subscribe();
   sb.channel('confessions-changes').on('postgres_changes', { event:'*', schema:'public', table:'confessions' }, () => loadConfessions()).subscribe();
+  sb.channel('answers-changes').on('postgres_changes', { event:'*', schema:'public', table:'answers' }, async () => {
+    await loadAnswers();
+    renderAllAnswersList();
+  }).subscribe();
   sb.channel('notif-changes').on('postgres_changes', { event:'*', schema:'public', table:'notifications', filter:`user_id=eq.${currentUser.id}` }, () => loadNotifications()).subscribe();
   sb.channel('messages-changes').on('postgres_changes', { event:'*', schema:'public', table:'messages' }, payload => {
     const row = payload.new || payload.old;
@@ -384,6 +405,7 @@ async function reportContent(type, id){
   if(type === 'post') row.post_id = id;
   else if(type === 'confession') row.confession_id = id;
   else if(type === 'comment') row.comment_id = id;
+  else if(type === 'answer') row.answer_id = id;
   else if(type === 'user') row.reported_user_id = id;
   const { error } = await sb.from('reports').insert([row]);
   if(error){ toast('❌ ما قدرنا نرسل البلاغ: ' + error.message); return; }
@@ -470,20 +492,60 @@ async function submitConfession(){
 async function submitAnswer(){
   const txt = document.getElementById('answerText').value.trim();
   if(!txt || !activeQuestion){ toast('اكتب إجابة أولاً'); return; }
-  const { error } = await sb.from('posts')
-    .update({
-      a:txt, answered_by: currentUser.id,
-      answered_by_name: currentUser.name, answered_by_initials: currentUser.initials,
-      answered_by_avatar: currentUser.avatar_url || null
-    })
-    .eq('id', activeQuestion.id)
-    .is('a', null); // ينجح بس لو السؤال لسا بدون إجابة — يمنع تعارض لو اثنين جاوبوا بنفس اللحظة
+  const { error } = await sb.from('answers').insert([{
+    post_id: activeQuestion.id,
+    user_id: currentUser.id,
+    user_name: currentUser.name,
+    user_initials: currentUser.initials,
+    user_avatar: currentUser.avatar_url || null,
+    text: txt
+  }]);
   if(error){ toast('❌ صار خلل: ' + error.message); console.warn(error.message); return; }
   pushNotification(activeQuestion.asked_by, `${currentUser.name} جاوب على سؤالك`, {type:'answer', postId: activeQuestion.id});
   toast('✅ تم نشر إجابتك للجميع (+5 🪙)');
   closeSheet();
-  await loadPosts();
+  await loadAnswers();
   await loadMyProfileCoins();
+}
+
+// ================= كل الإجابات على سؤال (نافذة منبثقة) =================
+function openAllAnswers(postId){
+  activeAnswersQuestion = publicPosts.find(p=>p.id===postId);
+  if(!activeAnswersQuestion) return;
+  document.getElementById('allAnswersQuestionPreview').textContent = activeAnswersQuestion.q;
+  renderAllAnswersList();
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('allAnswersSheet').classList.add('show');
+}
+function renderAllAnswersList(){
+  const el = document.getElementById('allAnswersList');
+  if(!el || !activeAnswersQuestion) return;
+  const list = answersByPost[activeAnswersQuestion.id] || [];
+  if(list.length === 0){
+    el.innerHTML = `<div class="empty-state" style="padding:22px 10px;"><div class="big">💭</div>ولا فيه إجابات بعد</div>`;
+    return;
+  }
+  el.innerHTML = list.map(a => `
+    <div class="comment-item">
+      <span ${up(a.user_id)}>${avatarHtml(a.user_avatar, a.user_initials, '')}</span>
+      <div class="comment-body">
+        <b ${up(a.user_id)}>${esc(a.user_name) || 'مستخدم'}</b>
+        <div class="ctext">${esc(a.text)}</div>
+        <div class="muted" style="font-size:9.5px; margin-top:2px;">${timeAgo(a.created_at)}</div>
+      </div>
+      ${a.user_id === currentUser.id
+        ? `<div class="foot-btn" style="align-self:flex-start;" onclick="deleteAnswer('${a.id}','${activeAnswersQuestion.id}')">🗑️</div>`
+        : `<div class="foot-btn" style="align-self:flex-start;" onclick="reportContent('answer','${a.id}')">🚩</div>`}
+    </div>
+  `).join('');
+}
+async function deleteAnswer(answerId, postId){
+  if(!(await showConfirm('حذف الإجابة', 'حذف هذه الإجابة؟', {icon:'🗑️', okText:'حذف'}))) return;
+  const { error } = await sb.from('answers').delete().eq('id', answerId);
+  if(error){ toast('❌ ما قدرنا نحذف: ' + error.message); return; }
+  toast('🗑️ تم الحذف');
+  await loadAnswers();
+  if(activeAnswersQuestion && activeAnswersQuestion.id === postId) renderAllAnswersList();
 }
 
 // ================= زيارة حساب شخص =================
@@ -502,6 +564,15 @@ async function viewProfile(userId){
   if(!isMe) qQuery = qQuery.eq('anon', false);
   const { data: userQuestions } = await qQuery;
 
+  // عدد الإجابات على كل سؤال من أسئلته (إجابات متعددة ممكنة الحين)
+  const qIds = (userQuestions || []).map(q => q.id);
+  let answerCounts = {};
+  if(qIds.length){
+    const { data: ansData } = await sb.from('answers').select('post_id').in('post_id', qIds);
+    (ansData || []).forEach(a => { answerCounts[a.post_id] = (answerCounts[a.post_id]||0) + 1; });
+  }
+  const questionsWithCounts = (userQuestions || []).map(q => ({ ...q, answersCount: answerCounts[q.id] || 0 }));
+
   // اقتباساته: دايماً علنية
   const { data: userQuotes } = await sb.from('posts').select('*').eq('author_id', userId).eq('type','quote').order('created_at',{ascending:false});
 
@@ -513,7 +584,7 @@ async function viewProfile(userId){
   renderProfileSheet(data, {
     isMe,
     followerCount: followerCount || 0,
-    questions: userQuestions || [],
+    questions: questionsWithCounts,
     quotes: userQuotes || [],
     confessions: userConfessions || []
   });
