@@ -17,12 +17,25 @@ const topics = [
   {name:'صداقة', emoji:'🤝'},
   {name:'تحفيز', emoji:'🔥'},
 ];
+function computeTopics(){
+  const seedNames = topics.map(t=>t.name);
+  const extra = new Set();
+  publicPosts.forEach(p=>{ if(p.type==='quote' && p.topic && !seedNames.includes(p.topic)) extra.add(p.topic); });
+  return [...topics, ...[...extra].map(name=>({name, emoji:'#'}))];
+}
 let exploreTopic = 'الكل';
 let exploreSearchTerm = '';
 let composerMode = 'ask';
 let activeQuestion = null;
 let authMode = 'login';
 let notifPanelOpen = false;
+
+let conversations = [];       // قائمة محادثات الرسائل الخاصة
+let activeThreadUserId = null;
+let activeThreadUser = null;
+let threadMessages = [];
+let featuredPost = null;      // الاقتباس المميز الحالي (أعلى لايكات كل 24 ساعة)
+let shareText = null;         // النص اللي بيتم اختيار شخص لإرساله له عبر الرسائل
 
 // ================= AUTH (تسجيل الدخول / إنشاء حساب) =================
 function toggleAuthMode(){
@@ -101,7 +114,7 @@ async function bootApp(session){
   // هذا يخلي الـ CSS (media query) هو اللي يقرر أي واجهة تظهر حسب حجم الشاشة
   document.body.classList.add('app-active');
 
-  await Promise.all([loadPosts(), loadConfessions(), loadMyLikes(), loadNotifications(), loadPeople(), loadFollowing()]);
+  await Promise.all([loadPosts(), loadConfessions(), loadMyLikes(), loadNotifications(), loadPeople(), loadFollowing(), loadConversations(), loadFeatured()]);
   render();
   subscribeRealtime();
 }
@@ -144,11 +157,53 @@ async function loadFollowing(){
   const { data } = await sb.from('follows').select('following_id').eq('follower_id', currentUser.id);
   followingIds = new Set((data||[]).map(r=>r.following_id));
 }
+async function loadFeatured(){
+  await sb.rpc('refresh_featured_quote');
+  const { data } = await sb.from('app_state').select('featured_post_id').eq('id',1).single();
+  if(data && data.featured_post_id){
+    const { data: post } = await sb.from('posts').select('*').eq('id', data.featured_post_id).single();
+    featuredPost = post || null;
+  } else {
+    featuredPost = null;
+  }
+  render();
+}
+async function loadConversations(){
+  if(!currentUser) return;
+  const { data } = await sb.from('messages')
+    .select('*')
+    .or(`from_id.eq.${currentUser.id},to_id.eq.${currentUser.id}`)
+    .order('created_at', { ascending:false });
+  const map = new Map();
+  (data||[]).forEach(m=>{
+    const otherId = m.from_id === currentUser.id ? m.to_id : m.from_id;
+    if(!map.has(otherId)) map.set(otherId, { userId:otherId, lastText:m.text, lastTime:m.created_at, unread:0 });
+    if(m.to_id===currentUser.id && !m.read) map.get(otherId).unread++;
+  });
+  const ids = [...map.keys()];
+  if(ids.length){
+    const { data: profs } = await sb.from('profiles').select('id,name,initials,avatar_url').in('id', ids);
+    (profs||[]).forEach(p=>{ const c = map.get(p.id); if(c){ c.name=p.name; c.initials=p.initials; c.avatar=p.avatar_url; } });
+  }
+  conversations = [...map.values()].sort((a,b)=> new Date(b.lastTime) - new Date(a.lastTime));
+  renderNotifBadge();
+  if(currentTab === 'messages') render();
+}
 
 function subscribeRealtime(){
   sb.channel('posts-changes').on('postgres_changes', { event:'*', schema:'public', table:'posts' }, () => loadPosts()).subscribe();
   sb.channel('confessions-changes').on('postgres_changes', { event:'*', schema:'public', table:'confessions' }, () => loadConfessions()).subscribe();
   sb.channel('notif-changes').on('postgres_changes', { event:'*', schema:'public', table:'notifications', filter:`user_id=eq.${currentUser.id}` }, () => loadNotifications()).subscribe();
+  sb.channel('messages-changes').on('postgres_changes', { event:'*', schema:'public', table:'messages' }, payload => {
+    const row = payload.new || payload.old;
+    if(!row) return;
+    if(row.from_id === currentUser.id || row.to_id === currentUser.id){
+      loadConversations();
+      if(activeThreadUserId && (row.from_id === activeThreadUserId || row.to_id === activeThreadUserId)){
+        loadThread(activeThreadUserId, activeThreadUser);
+      }
+    }
+  }).subscribe();
 }
 
 async function pushNotification(userId, text, meta={}){
@@ -176,6 +231,9 @@ async function toggleLike(postId){
     sb.from('likes').insert([{user_id:currentUser.id, post_id:postId}]).then(()=>{});
     const owner = item.type === 'quote' ? item.author_id : (item.answered_by || item.asked_by);
     pushNotification(owner, `${currentUser.name} أعجب بمنشورك`, {type:'like', postId: postId});
+    if(owner && owner !== currentUser.id){
+      sb.rpc('increment_coins', { uid: owner, delta: 1 }).then(()=>{});
+    }
   }
   sb.rpc('increment_post_likes', { pid: postId, delta: alreadyLiked ? -1 : 1 }).then(()=>{});
   render();
@@ -192,6 +250,9 @@ async function toggleConfessionLike(confId){
     myLikedConfessionIds.add(confId);
     item.likes += 1;
     sb.from('confession_likes').insert([{user_id:currentUser.id, confession_id:confId}]).then(()=>{});
+    if(item.user_id && item.anon === false && item.user_id !== currentUser.id){
+      sb.rpc('increment_coins', { uid: item.user_id, delta: 1 }).then(()=>{});
+    }
   }
   sb.rpc('increment_confession_likes', { cid: confId, delta: alreadyLiked ? -1 : 1 }).then(()=>{});
   render();
@@ -222,18 +283,24 @@ async function submitAsk(){
   const txt = document.getElementById('askText').value.trim();
   if(!txt){ toast('اكتب سؤالاً أولاً'); return; }
   const anon = document.getElementById('anonToggle').classList.contains('on');
+  const topicEl = document.getElementById('askTopic');
+  const topic = (topicEl && topicEl.value.trim()) || 'الكل';
   const { error } = await sb.from('posts').insert([{
-    type:'qa', q:txt, a:null, anon,
+    type:'qa', q:txt, a:null, anon, topic,
     asked_by: currentUser.id,
     asker_name: anon ? null : currentUser.name,
     asker_initials: anon ? null : currentUser.initials,
     asker_avatar: anon ? null : (currentUser.avatar_url || null)
   }]);
   if(error){ toast('❌ ما قدرنا ننشر السؤال: ' + error.message); console.warn(error.message); return; }
-  toast('✅ تم إرسال سؤالك للجميع');
+  await sb.rpc('increment_coins', { uid: currentUser.id, delta: 8 });
+  currentUser.coins += 8;
+  toast('✅ تم إرسال سؤالك للجميع (+8 🪙)');
   document.getElementById('askText').value = '';
+  if(topicEl) topicEl.value = '';
   closeSheet();
   loadPosts();
+  render();
 }
 async function submitShoutout(){
   const txt = document.getElementById('shoutText').value.trim();
@@ -247,7 +314,7 @@ async function submitShoutout(){
   if(error){ toast('❌ ما قدرنا ننشر الشوت أوت: ' + error.message); console.warn(error.message); return; }
   await sb.from('profiles').update({coins: currentUser.coins - 15}).eq('id', currentUser.id);
   currentUser.coins -= 15;
-  toast('📢 تم نشر الشوت أوت');
+  toast('📢 تم نشر الشوت أوت — وصل إشعار لكل الأعضاء');
   document.getElementById('shoutText').value = '';
   closeSheet();
   loadPosts();
@@ -256,23 +323,34 @@ async function submitShoutout(){
 async function submitQuote(){
   const txt = document.getElementById('quoteText').value.trim();
   if(!txt){ toast('اكتب الاقتباس أولاً'); return; }
+  const topicEl = document.getElementById('quoteTopic');
+  const topic = (topicEl && topicEl.value.trim()) || 'الكل';
   const { error } = await sb.from('posts').insert([{
-    type:'quote', text:txt, topic:'الكل', anon:false,
+    type:'quote', text:txt, topic, anon:false,
     author_id: currentUser.id, author_name: currentUser.name, author_initials: currentUser.initials,
     author_avatar: currentUser.avatar_url || null
   }]);
   if(error){ toast('❌ ما قدرنا ننشر الاقتباس: ' + error.message); console.warn(error.message); return; }
   toast('❝ تم نشر اقتباسك للجميع');
   document.getElementById('quoteText').value = '';
+  if(topicEl) topicEl.value = '';
   closeSheet();
   loadPosts();
 }
 async function submitConfession(){
   const txt = document.getElementById('confessionText').value.trim();
   if(!txt){ toast('اكتب اعترافك أولاً'); return; }
-  const { error } = await sb.from('confessions').insert([{ text:txt }]);
+  const anon = document.getElementById('confessionAnonToggle').classList.contains('on');
+  const row = { text:txt, anon };
+  if(!anon){
+    row.user_id = currentUser.id;
+    row.user_name = currentUser.name;
+    row.user_initials = currentUser.initials;
+    row.user_avatar = currentUser.avatar_url || null;
+  }
+  const { error } = await sb.from('confessions').insert([row]);
   if(error){ toast('❌ ما قدرنا ننشر الاعتراف: ' + error.message); console.warn(error.message); return; }
-  toast('🎭 تم نشر اعترافك بدون أي أثر لهويتك');
+  toast(anon ? '🎭 تم نشر اعترافك بشكل مجهول بالكامل' : '🎭 تم نشر اعترافك باسمك');
   document.getElementById('confessionText').value = '';
   closeSheet();
   loadConfessions();
@@ -281,17 +359,80 @@ async function submitAnswer(){
   const txt = document.getElementById('answerText').value.trim();
   if(!txt || !activeQuestion){ toast('اكتب إجابة أولاً'); return; }
   const { error } = await sb.from('posts')
-    .update({ a:txt, answered_by: currentUser.id })
+    .update({
+      a:txt, answered_by: currentUser.id,
+      answered_by_name: currentUser.name, answered_by_initials: currentUser.initials,
+      answered_by_avatar: currentUser.avatar_url || null
+    })
     .eq('id', activeQuestion.id)
     .is('a', null); // ينجح بس لو السؤال لسا بدون إجابة — يمنع تعارض لو اثنين جاوبوا بنفس اللحظة
   if(error){ toast('❌ صار خلل: ' + error.message); console.warn(error.message); return; }
-  await sb.from('profiles').update({coins: currentUser.coins + 3}).eq('id', currentUser.id);
-  currentUser.coins += 3;
+  await sb.rpc('increment_coins', { uid: currentUser.id, delta: 5 });
+  currentUser.coins += 5;
   pushNotification(activeQuestion.asked_by, `${currentUser.name} جاوب على سؤالك`, {type:'answer', postId: activeQuestion.id});
-  toast('✅ تم نشر إجابتك للجميع');
+  toast('✅ تم نشر إجابتك للجميع (+5 🪙)');
   closeSheet();
   loadPosts();
   render();
+}
+
+// ================= زيارة حساب شخص =================
+async function viewProfile(userId){
+  if(!userId) return;
+  const { data, error } = await sb.from('profiles').select('*').eq('id', userId).single();
+  if(error || !data){ toast('تعذّر فتح هذا الحساب'); return; }
+  renderProfileSheet(data);
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('profileSheet').classList.add('show');
+}
+
+// ================= الرسائل الخاصة (DM) =================
+async function loadThread(userId, userInfo){
+  activeThreadUserId = userId;
+  activeThreadUser = userInfo;
+  const { data } = await sb.from('messages')
+    .select('*')
+    .or(`and(from_id.eq.${currentUser.id},to_id.eq.${userId}),and(from_id.eq.${userId},to_id.eq.${currentUser.id})`)
+    .order('created_at', { ascending:true });
+  threadMessages = data || [];
+  const unreadIds = threadMessages.filter(m=>m.to_id===currentUser.id && !m.read).map(m=>m.id);
+  if(unreadIds.length){
+    sb.from('messages').update({read:true}).in('id', unreadIds).then(()=> loadConversations());
+  }
+  renderThread();
+}
+async function openThread(userId, name, initials, avatar){
+  await loadThread(userId, { name, initials, avatar });
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('threadSheet').classList.add('show');
+}
+async function sendMessage(){
+  const el = document.getElementById('threadText');
+  const txt = el.value.trim();
+  if(!txt || !activeThreadUserId) return;
+  el.value = '';
+  const { error } = await sb.from('messages').insert([{ from_id:currentUser.id, to_id:activeThreadUserId, text:txt }]);
+  if(error){ toast('❌ ما قدرنا نرسل الرسالة: ' + error.message); console.warn(error.message); return; }
+  pushNotification(activeThreadUserId, `${currentUser.name} أرسل لك رسالة 💬`, {type:'message'});
+  loadThread(activeThreadUserId, activeThreadUser);
+  loadConversations();
+}
+
+// ---- مشاركة عبر الرسائل ----
+function openSharePicker(text){
+  shareText = text;
+  renderSharePicker();
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('sharePickerSheet').classList.add('show');
+}
+async function shareToPerson(userId){
+  if(!shareText || !userId) return;
+  const { error } = await sb.from('messages').insert([{ from_id:currentUser.id, to_id:userId, text: shareText }]);
+  if(error){ toast('❌ ما قدرنا نشارك: ' + error.message); return; }
+  pushNotification(userId, `${currentUser.name} شارك معك شي 📤`, {type:'message'});
+  toast('✅ تم الإرسال');
+  closeSheet();
+  loadConversations();
 }
 
 // ================= التعليقات =================
@@ -318,9 +459,9 @@ function renderCommentsList(){
   }
   el.innerHTML = currentComments.map(c => `
     <div class="comment-item">
-      ${c.user_avatar ? `<div class="avatar"><img class="avatar-img" src="${c.user_avatar}"></div>` : `<div class="avatar">${c.user_initials||'?'}</div>`}
+      <span ${up(c.user_id)}>${c.user_avatar ? `<div class="avatar"><img class="avatar-img" src="${c.user_avatar}"></div>` : `<div class="avatar">${c.user_initials||'?'}</div>`}</span>
       <div class="comment-body">
-        <b>${c.user_name || 'مستخدم'}</b>
+        <b ${up(c.user_id)}>${c.user_name || 'مستخدم'}</b>
         <div class="ctext">${c.text}</div>
         <div class="muted" style="font-size:9.5px; margin-top:2px;">${timeAgo(c.created_at)}</div>
       </div>
