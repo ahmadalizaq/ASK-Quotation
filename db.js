@@ -43,6 +43,7 @@ function toggleAuthMode(){
   document.getElementById('authTitle').textContent = authMode==='login' ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
   document.getElementById('authSub').textContent = authMode==='login' ? 'أدخل بياناتك للمتابعة' : 'خلك أنت — بحساب حقيقي من الصفر';
   document.getElementById('nameField').style.display = authMode==='signup' ? 'block' : 'none';
+  document.getElementById('confirmPasswordField').style.display = authMode==='signup' ? 'block' : 'none';
   document.getElementById('authSubmitBtn').textContent = authMode==='login' ? 'دخول' : 'إنشاء الحساب';
   document.getElementById('authSwitchLine').innerHTML = authMode==='login'
     ? 'ماعندك حساب؟ <a onclick="toggleAuthMode()">أنشئ حساب جديد</a>'
@@ -59,12 +60,16 @@ function showAuthError(msg){
 async function submitAuth(){
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
+  const confirmField = document.getElementById('authPasswordConfirm');
   const name = document.getElementById('authName').value.trim();
   const btn = document.getElementById('authSubmitBtn');
 
   if(!email || !password){ showAuthError('عبّي البريد وكلمة المرور'); return; }
   if(authMode==='signup' && !name){ showAuthError('اكتب اسمك'); return; }
   if(password.length < 6){ showAuthError('كلمة المرور لازم 6 أحرف على الأقل'); return; }
+  if(authMode==='signup' && confirmField && confirmField.value !== password){
+    showAuthError('كلمة المرور وتأكيدها مو متطابقين'); return;
+  }
 
   btn.disabled = true;
   btn.textContent = '...';
@@ -85,6 +90,14 @@ async function submitAuth(){
     if(error){ showAuthError(error.message); btn.disabled=false; btn.textContent='دخول'; return; }
   }
   // onAuthStateChange بتتكفل تفتح التطبيق بمجرد ما تصير الجلسة جاهزة
+}
+
+async function requestPasswordReset(){
+  const email = document.getElementById('authEmail').value.trim();
+  if(!email){ showAuthError('اكتب بريدك الإلكتروني فوق أولاً'); return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email);
+  if(error){ showAuthError(error.message); return; }
+  toast('✅ إذا البريد مسجل عندنا، بيوصلك رابط لإعادة تعيين كلمة المرور');
 }
 
 async function logout(){
@@ -121,13 +134,13 @@ async function bootApp(session){
 
 // ================= تحميل البيانات =================
 async function loadPosts(){
-  const { data, error } = await sb.from('posts').select('*').order('created_at', { ascending:false }).limit(100);
+  const { data, error } = await sb.from('posts_feed').select('*').order('created_at', { ascending:false }).limit(100);
   if(error){ console.warn('posts load error:', error.message); return; }
   publicPosts = data || [];
   render();
 }
 async function loadConfessions(){
-  const { data, error } = await sb.from('confessions').select('*').order('created_at', { ascending:false }).limit(100);
+  const { data, error } = await sb.from('confessions_feed').select('*').order('created_at', { ascending:false }).limit(100);
   if(error){ console.warn('confessions load error:', error.message); return; }
   confessions = data || [];
   render();
@@ -224,19 +237,23 @@ async function toggleLike(postId){
   if(alreadyLiked){
     myLikedPostIds.delete(postId);
     item.likes = Math.max(0, item.likes-1);
-    sb.from('likes').delete().eq('user_id', currentUser.id).eq('post_id', postId).then(()=>{});
+    const { error } = await sb.from('likes').delete().eq('user_id', currentUser.id).eq('post_id', postId);
+    if(error){ console.warn('unlike failed:', error.message); }
   } else {
     myLikedPostIds.add(postId);
     item.likes += 1;
-    sb.from('likes').insert([{user_id:currentUser.id, post_id:postId}]).then(()=>{});
+    const { error } = await sb.from('likes').insert([{user_id:currentUser.id, post_id:postId}]);
+    if(error){ console.warn('like failed:', error.message); myLikedPostIds.delete(postId); item.likes = Math.max(0, item.likes-1); render(); return; }
     const owner = item.type === 'quote' ? item.author_id : (item.answered_by || item.asked_by);
     pushNotification(owner, `${currentUser.name} أعجب بمنشورك`, {type:'like', postId: postId});
-    if(owner && owner !== currentUser.id){
-      sb.rpc('increment_coins', { uid: owner, delta: 1 }).then(()=>{});
-    }
   }
-  sb.rpc('increment_post_likes', { pid: postId, delta: alreadyLiked ? -1 : 1 }).then(()=>{});
+  // اللايك والعملة المكافأة صارت تحسب تلقائياً بقاعدة البيانات (trigger) — نحدّث رصيدنا محلياً للعرض السريع بس
+  loadMyProfileCoins();
   render();
+}
+async function loadMyProfileCoins(){
+  const { data } = await sb.from('profiles').select('coins').eq('id', currentUser.id).single();
+  if(data){ currentUser.coins = data.coins; render(); }
 }
 async function toggleConfessionLike(confId){
   const item = confessions.find(c=>c.id===confId);
@@ -245,16 +262,14 @@ async function toggleConfessionLike(confId){
   if(alreadyLiked){
     myLikedConfessionIds.delete(confId);
     item.likes = Math.max(0, item.likes-1);
-    sb.from('confession_likes').delete().eq('user_id', currentUser.id).eq('confession_id', confId).then(()=>{});
+    await sb.from('confession_likes').delete().eq('user_id', currentUser.id).eq('confession_id', confId);
   } else {
     myLikedConfessionIds.add(confId);
     item.likes += 1;
-    sb.from('confession_likes').insert([{user_id:currentUser.id, confession_id:confId}]).then(()=>{});
-    if(item.user_id && item.anon === false && item.user_id !== currentUser.id){
-      sb.rpc('increment_coins', { uid: item.user_id, delta: 1 }).then(()=>{});
-    }
+    const { error } = await sb.from('confession_likes').insert([{user_id:currentUser.id, confession_id:confId}]);
+    if(error){ console.warn('like failed:', error.message); myLikedConfessionIds.delete(confId); item.likes = Math.max(0, item.likes-1); render(); return; }
   }
-  sb.rpc('increment_confession_likes', { cid: confId, delta: alreadyLiked ? -1 : 1 }).then(()=>{});
+  loadMyProfileCoins();
   render();
 }
 async function toggleFollow(targetId){
@@ -278,6 +293,77 @@ async function upgradeVip(){
   render();
 }
 
+async function deleteMyAccount(){
+  if(!confirm('هذا حذف نهائي لحسابك وكل محتواك — ما يرجع بعدها. متأكد تماماً؟')) return;
+  if(!confirm('تأكيد أخير: بيتحذف حسابك الآن للأبد. أكيد؟')) return;
+  const { error } = await sb.rpc('delete_my_account');
+  if(error){ toast('❌ ما قدرنا نحذف الحساب: ' + error.message); console.warn(error.message); return; }
+  toast('تم حذف حسابك');
+  currentUser = null;
+  document.body.classList.remove('app-active');
+  document.getElementById('authScreen').style.display = 'flex';
+}
+
+// ================= تعديل/حذف المحتوى الخاص بك =================
+async function deletePost(postId){
+  if(!confirm('حذف هذا المنشور نهائياً؟')) return;
+  const { error } = await sb.from('posts').delete().eq('id', postId);
+  if(error){ toast('❌ ما قدرنا نحذف: ' + error.message); return; }
+  toast('🗑️ تم الحذف');
+  loadPosts();
+}
+async function deleteConfession(confId){
+  if(!confirm('حذف هذا الاعتراف نهائياً؟')) return;
+  const { error } = await sb.from('confessions').delete().eq('id', confId);
+  if(error){ toast('❌ ما قدرنا نحذف: ' + error.message); return; }
+  toast('🗑️ تم الحذف');
+  loadConfessions();
+}
+async function deleteComment(commentId, type, targetId){
+  if(!confirm('حذف هذا التعليق؟')) return;
+  const { error } = await sb.from('comments').delete().eq('id', commentId);
+  if(error){ toast('❌ ما قدرنا نحذف: ' + error.message); return; }
+  if(type === 'post'){
+    const item = publicPosts.find(p=>p.id===targetId);
+    if(item) item.comments = Math.max(0, (item.comments||0)-1);
+  } else {
+    const item = confessions.find(c=>c.id===targetId);
+    if(item) item.comments = Math.max(0, (item.comments||0)-1);
+  }
+  render();
+  openComments(type, targetId);
+}
+async function editQuote(postId){
+  const item = publicPosts.find(p=>p.id===postId);
+  if(!item) return;
+  const newText = prompt('عدّل نص الاقتباس:', item.text);
+  if(newText === null || !newText.trim() || newText.trim() === item.text) return;
+  const { error } = await sb.from('posts').update({ text: newText.trim() }).eq('id', postId);
+  if(error){ toast('❌ ما قدرنا نحفظ التعديل: ' + error.message); return; }
+  toast('✅ تم التعديل');
+  loadPosts();
+}
+
+// ================= الإبلاغ والحظر =================
+async function reportContent(type, id){
+  const reason = prompt('وش سبب الإبلاغ؟ (اختياري)') || null;
+  const row = { reporter_id: currentUser.id, reason };
+  if(type === 'post') row.post_id = id;
+  else if(type === 'confession') row.confession_id = id;
+  else if(type === 'comment') row.comment_id = id;
+  else if(type === 'user') row.reported_user_id = id;
+  const { error } = await sb.from('reports').insert([row]);
+  if(error){ toast('❌ ما قدرنا نرسل البلاغ: ' + error.message); return; }
+  toast('✅ تم إرسال البلاغ، شكراً لك');
+}
+async function blockUser(userId){
+  if(!confirm('حظر هذا الشخص؟ ما راح يقدر يراسلك ولا تشوف بعض بالمستقبل بسهولة.')) return;
+  const { error } = await sb.from('blocks').insert([{ blocker_id: currentUser.id, blocked_id: userId }]);
+  if(error){ toast('❌ صار خلل: ' + error.message); return; }
+  toast('🚫 تم الحظر');
+  closeSheet();
+}
+
 // ================= إنشاء المحتوى (composer) =================
 async function submitAsk(){
   const txt = document.getElementById('askText').value.trim();
@@ -293,32 +379,25 @@ async function submitAsk(){
     asker_avatar: anon ? null : (currentUser.avatar_url || null)
   }]);
   if(error){ toast('❌ ما قدرنا ننشر السؤال: ' + error.message); console.warn(error.message); return; }
-  await sb.rpc('increment_coins', { uid: currentUser.id, delta: 8 });
-  currentUser.coins += 8;
   toast('✅ تم إرسال سؤالك للجميع (+8 🪙)');
   document.getElementById('askText').value = '';
   if(topicEl) topicEl.value = '';
   closeSheet();
-  loadPosts();
-  render();
+  await loadPosts();
+  await loadMyProfileCoins();
 }
 async function submitShoutout(){
   const txt = document.getElementById('shoutText').value.trim();
   if(!txt){ toast('اكتب نص الشوت أوت أولاً'); return; }
   if(currentUser.coins < 15){ toast('رصيدك من ASKcoins غير كافٍ'); return; }
-  const { error } = await sb.from('posts').insert([{
-    type:'qa', q:txt, a:null, anon:false, is_shoutout:true,
-    asked_by: currentUser.id, asker_name: currentUser.name, asker_initials: currentUser.initials,
-    asker_avatar: currentUser.avatar_url || null
-  }]);
+  if(!confirm('بينخصم 15 🪙 من رصيدك وينشر لكل الأعضاء فوراً. متأكد؟')) return;
+  const { error } = await sb.rpc('create_shoutout', { q_text: txt });
   if(error){ toast('❌ ما قدرنا ننشر الشوت أوت: ' + error.message); console.warn(error.message); return; }
-  await sb.from('profiles').update({coins: currentUser.coins - 15}).eq('id', currentUser.id);
-  currentUser.coins -= 15;
   toast('📢 تم نشر الشوت أوت — وصل إشعار لكل الأعضاء');
   document.getElementById('shoutText').value = '';
   closeSheet();
-  loadPosts();
-  render();
+  await loadPosts();
+  await loadMyProfileCoins();
 }
 async function submitQuote(){
   const txt = document.getElementById('quoteText').value.trim();
@@ -367,13 +446,11 @@ async function submitAnswer(){
     .eq('id', activeQuestion.id)
     .is('a', null); // ينجح بس لو السؤال لسا بدون إجابة — يمنع تعارض لو اثنين جاوبوا بنفس اللحظة
   if(error){ toast('❌ صار خلل: ' + error.message); console.warn(error.message); return; }
-  await sb.rpc('increment_coins', { uid: currentUser.id, delta: 5 });
-  currentUser.coins += 5;
   pushNotification(activeQuestion.asked_by, `${currentUser.name} جاوب على سؤالك`, {type:'answer', postId: activeQuestion.id});
   toast('✅ تم نشر إجابتك للجميع (+5 🪙)');
   closeSheet();
-  loadPosts();
-  render();
+  await loadPosts();
+  await loadMyProfileCoins();
 }
 
 // ================= زيارة حساب شخص =================
@@ -426,7 +503,8 @@ async function loadThread(userId, userInfo){
   }
   renderThread();
 }
-async function openThread(userId, name, initials, avatar){
+async function openThread(userId, encodedName, initials, avatar){
+  const name = unb64(encodedName);
   await loadThread(userId, { name, initials, avatar });
   document.getElementById('overlay').classList.add('show');
   document.getElementById('threadSheet').classList.add('show');
@@ -444,8 +522,8 @@ async function sendMessage(){
 }
 
 // ---- مشاركة عبر الرسائل ----
-function openSharePicker(text){
-  shareText = text;
+function openSharePicker(encodedText){
+  shareText = unb64(encodedText);
   renderSharePicker();
   document.getElementById('overlay').classList.add('show');
   document.getElementById('sharePickerSheet').classList.add('show');
@@ -484,12 +562,15 @@ function renderCommentsList(){
   }
   el.innerHTML = currentComments.map(c => `
     <div class="comment-item">
-      <span ${up(c.user_id)}>${c.user_avatar ? `<div class="avatar"><img class="avatar-img" src="${c.user_avatar}"></div>` : `<div class="avatar">${c.user_initials||'?'}</div>`}</span>
+      <span ${up(c.user_id)}>${c.user_avatar ? `<div class="avatar"><img class="avatar-img" src="${esc(c.user_avatar)}"></div>` : `<div class="avatar">${esc(c.user_initials)||'?'}</div>`}</span>
       <div class="comment-body">
-        <b ${up(c.user_id)}>${c.user_name || 'مستخدم'}</b>
-        <div class="ctext">${c.text}</div>
+        <b ${up(c.user_id)}>${esc(c.user_name) || 'مستخدم'}</b>
+        <div class="ctext">${esc(c.text)}</div>
         <div class="muted" style="font-size:9.5px; margin-top:2px;">${timeAgo(c.created_at)}</div>
       </div>
+      ${c.user_id === currentUser.id
+        ? `<div class="foot-btn" style="align-self:flex-start;" onclick="deleteComment('${c.id}','${activeCommentTarget.type}','${activeCommentTarget.id}')">🗑️</div>`
+        : `<div class="foot-btn" style="align-self:flex-start;" onclick="reportContent('comment','${c.id}')">🚩</div>`}
     </div>
   `).join('');
 }
@@ -510,11 +591,9 @@ async function submitComment(){
   if(type === 'post'){
     const item = publicPosts.find(p => p.id === id);
     if(item) item.comments = (item.comments||0) + 1;
-    sb.rpc('increment_post_comments', { pid:id, delta:1 }).then(()=>{});
   } else {
     const item = confessions.find(c => c.id === id);
     if(item) item.comments = (item.comments||0) + 1;
-    sb.rpc('increment_confession_comments', { cid:id, delta:1 }).then(()=>{});
   }
   render();
   openComments(type, id);
@@ -523,8 +602,12 @@ async function submitComment(){
 // ================= الصورة الشخصية =================
 async function uploadAvatar(file){
   if(!file || !currentUser) return;
+  if(!file.type || !file.type.startsWith('image/')){ toast('❌ لازم تختار صورة'); return; }
+  if(file.size > 5 * 1024 * 1024){ toast('❌ حجم الصورة كبير — الحد الأقصى 5 ميجا'); return; }
+  const allowedExt = ['jpg','jpeg','png','gif','webp'];
+  let ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+  if(!allowedExt.includes(ext)) ext = 'jpg';
   toast('⏳ جاري رفع الصورة...');
-  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
   const path = `${currentUser.id}/avatar.${ext}`;
   const { error: upErr } = await sb.storage.from('avatars').upload(path, file, { upsert:true });
   if(upErr){ toast('❌ ما قدرنا نرفع الصورة: ' + upErr.message); console.warn(upErr.message); return; }

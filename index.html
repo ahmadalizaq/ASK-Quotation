@@ -29,19 +29,26 @@
     <div class="auth-error" id="authError"></div>
     <div class="auth-field" id="nameField" style="display:none;">
       <label>اسمك</label>
-      <input type="text" id="authName" placeholder="مثال: سارة العتيبي">
+      <input type="text" id="authName" placeholder="مثال: سارة العتيبي" maxlength="60">
     </div>
     <div class="auth-field">
       <label>البريد الإلكتروني</label>
-      <input type="email" id="authEmail" placeholder="you@example.com">
+      <input type="email" id="authEmail" placeholder="you@example.com" maxlength="200">
     </div>
     <div class="auth-field">
       <label>كلمة المرور</label>
-      <input type="password" id="authPassword" placeholder="6 أحرف على الأقل">
+      <input type="password" id="authPassword" placeholder="6 أحرف على الأقل" maxlength="72">
+    </div>
+    <div class="auth-field" id="confirmPasswordField" style="display:none;">
+      <label>تأكيد كلمة المرور</label>
+      <input type="password" id="authPasswordConfirm" placeholder="أعد كتابة كلمة المرور" maxlength="72">
     </div>
     <button class="btn-primary" id="authSubmitBtn" onclick="submitAuth()">دخول</button>
     <div class="auth-switch" id="authSwitchLine">
       ماعندك حساب؟ <a onclick="toggleAuthMode()">أنشئ حساب جديد</a>
+    </div>
+    <div class="auth-switch" style="margin-top:6px;">
+      <a onclick="requestPasswordReset()">نسيت كلمة المرور؟</a>
     </div>
   </div>
 </div>
@@ -124,8 +131,8 @@
   <datalist id="topicDatalist"></datalist>
 
   <div id="composerAskBody">
-    <textarea id="askText" rows="3" placeholder="اكتب سؤالك هنا... بينشر للجميع، وأي شخص يقدر يجاوب عليه"></textarea>
-    <input type="text" id="askTopic" list="topicDatalist" placeholder="الفئة (مثال: حب، نجاح...) — اختياري" style="margin-top:8px;">
+    <textarea id="askText" rows="3" maxlength="500" placeholder="اكتب سؤالك هنا... بينشر للجميع، وأي شخص يقدر يجاوب عليه"></textarea>
+    <input type="text" id="askTopic" list="topicDatalist" maxlength="30" placeholder="الفئة (مثال: حب، نجاح...) — اختياري" style="margin-top:8px;">
     <div class="toggle-row">
       <span>سؤال مجهول (ما يظهر اسمك)</span>
       <div class="toggle on" id="anonToggle" onclick="this.classList.toggle('on')"><div class="toggle-dot"></div></div>
@@ -134,19 +141,19 @@
   </div>
 
   <div id="composerShoutBody" style="display:none;">
-    <textarea id="shoutText" rows="3" placeholder="اكتب سؤال الشوت أوت..."></textarea>
+    <textarea id="shoutText" rows="3" maxlength="500" placeholder="اكتب سؤال الشوت أوت..."></textarea>
     <div class="toggle-row"><span>يكلف — وينبّه كل الأعضاء 📢</span><b style="font-size:12px;color:var(--red)">15 🪙</b></div>
     <button class="btn-primary" onclick="submitShoutout()">نشر الشوت أوت</button>
   </div>
 
   <div id="composerQuoteBody" style="display:none;">
-    <textarea id="quoteText" rows="3" placeholder="اكتب اقتباساً أو حكمة لمشاركتها..."></textarea>
-    <input type="text" id="quoteTopic" list="topicDatalist" placeholder="الفئة — اختر موجودة أو اكتب فئة جديدة" style="margin-top:8px;">
+    <textarea id="quoteText" rows="3" maxlength="500" placeholder="اكتب اقتباساً أو حكمة لمشاركتها..."></textarea>
+    <input type="text" id="quoteTopic" list="topicDatalist" maxlength="30" placeholder="الفئة — اختر موجودة أو اكتب فئة جديدة" style="margin-top:8px;">
     <button class="btn-primary" onclick="submitQuote()">نشر الاقتباس</button>
   </div>
 
   <div id="composerConfessionBody" style="display:none;">
-    <textarea id="confessionText" rows="4" placeholder="اكتب اعترافك هنا..."></textarea>
+    <textarea id="confessionText" rows="4" maxlength="1000" placeholder="اكتب اعترافك هنا..."></textarea>
     <div class="toggle-row">
       <span>اعتراف مجهول (ما يظهر اسمك)</span>
       <div class="toggle on" id="confessionAnonToggle" onclick="this.classList.toggle('on')"><div class="toggle-dot"></div></div>
@@ -167,7 +174,7 @@
   <div class="sheet-title" id="threadTitle">محادثة</div>
   <div id="threadMessages" style="max-height:46vh; overflow-y:auto; margin-bottom:12px; display:flex; flex-direction:column;"></div>
   <div style="display:flex; gap:8px;">
-    <input type="text" id="threadText" placeholder="اكتب رسالتك..." style="flex:1;" onkeydown="if(event.key==='Enter') sendMessage()">
+    <input type="text" id="threadText" maxlength="1000" placeholder="اكتب رسالتك..." style="flex:1;" onkeydown="if(event.key==='Enter') sendMessage()">
     <button class="btn-primary" style="width:auto; padding:12px 18px; margin-top:0;" onclick="sendMessage()">إرسال</button>
   </div>
 </div>
@@ -184,7 +191,7 @@
   <div class="sheet-handle"></div>
   <div class="sheet-title">التعليقات</div>
   <div id="commentsList" style="max-height:42vh; overflow-y:auto; margin-bottom:12px;"></div>
-  <textarea id="commentText" rows="2" placeholder="اكتب تعليقك..."></textarea>
+  <textarea id="commentText" rows="2" maxlength="500" placeholder="اكتب تعليقك..."></textarea>
   <button class="btn-primary" onclick="submitComment()">نشر التعليق</button>
 </div>
 
@@ -193,7 +200,7 @@
   <div class="sheet-handle"></div>
   <div class="sheet-title">الإجابة على السؤال</div>
   <div class="q-bubble" id="answerQuestionPreview"></div>
-  <textarea id="answerText" rows="4" placeholder="اكتب إجابتك..."></textarea>
+  <textarea id="answerText" rows="4" maxlength="1000" placeholder="اكتب إجابتك..."></textarea>
   <button class="btn-primary" onclick="submitAnswer()">نشر الإجابة</button>
 </div>
 
