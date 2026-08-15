@@ -304,6 +304,25 @@ async function upgradeVip(){
   render();
 }
 
+// ================= منطقة المطور =================
+async function wipeAllData(){
+  const typed = await showConfirm(
+    'حذف كل الحسابات والمحتوى',
+    'هذا يمسح نهائياً كل الحسابات (غير حسابك) وكل الأسئلة والاقتباسات والاعترافات. ما فيه رجعة. اكتب "حذف" بالضبط للتأكيد.',
+    { icon:'🧨', okText:'تنفيذ الحذف', withInput:true, inputPlaceholder:'اكتب: حذف' }
+  );
+  if(typed === false) return;
+  if(typed !== 'حذف'){ toast('لازم تكتب "حذف" بالضبط للتأكيد'); return; }
+
+  const { error } = await sb.rpc('wipe_all_users_and_content', { keep_self: true });
+  if(error){ toast('❌ فشل الحذف: ' + error.message); console.warn(error.message); return; }
+
+  toast('✅ تم مسح كل الحسابات والمحتوى');
+  publicPosts = []; confessions = []; peopleDirectory = []; conversations = []; featuredPost = null;
+  loadPosts(); loadConfessions(); loadPeople(); loadConversations(); loadFeatured();
+  render();
+}
+
 async function deleteMyAccount(){
   const step1 = await showConfirm('حذف الحساب نهائياً', 'هذا حذف نهائي لحسابك وكل محتواك — ما يرجع بعدها.', {icon:'⚠️', okText:'متابعة'});
   if(!step1) return;

@@ -166,6 +166,10 @@ function switchTab(tab){
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.tab === tab));
   if(tab === 'quotes') loadFeatured();
   if(tab === 'messages') loadConversations();
+  ['content','desktopContent'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){ el.classList.remove('content-fade'); void el.offsetWidth; el.classList.add('content-fade'); }
+  });
   render();
 }
 
@@ -371,7 +375,7 @@ function renderQuotesPage(){
 
     ${featuredPost ? `
     <div class="eyebrow">⭐ الاقتباس المميز (أعلى لايكات آخر 24 ساعة)</div>
-    <div class="quote-card" style="border-right-color:var(--orange);">
+    <div class="quote-card featured-quote" style="border-right-color:var(--orange);">
       <div class="qtext">${esc(featuredPost.text)}</div>
       <div class="qmeta">
         <div class="qauthor" ${up(featuredPost.anon?null:featuredPost.author_id)}>
@@ -492,6 +496,13 @@ function renderProfile(){
       <button class="btn-ghost" style="margin-top:0;" onclick="logout()">🚪 تسجيل الخروج</button>
       <button class="btn-ghost" style="margin-top:8px; color:var(--red); border-color:var(--red);" onclick="deleteMyAccount()">⚠️ حذف الحساب نهائياً</button>
     </div>
+
+    ${currentUser.is_admin ? `
+    <div class="eyebrow">⚙️ منطقة المطور</div>
+    <div class="card" style="border-color:var(--red);">
+      <div class="muted" style="font-size:11px; margin-bottom:10px; line-height:1.6;">يمسح كل الحسابات (غير حسابك) وكل الأسئلة والاقتباسات والاعترافات نهائياً. للاستخدام وقت التطوير والاختبار بس.</div>
+      <button class="btn-ghost" style="margin-top:0; color:var(--red); border-color:var(--red);" onclick="wipeAllData()">🧨 حذف كل الحسابات والمحتوى</button>
+    </div>` : ''}
 
     <div class="hint">حسابك حقيقي ومحفوظ بقاعدة بيانات — أي جهاز تسجل دخول منه بنفس البريد بتلقى نفس بياناتك.</div>
   `;
@@ -640,7 +651,7 @@ function exportStoryImage(text){
   canvas.width = 1080; canvas.height = 1350;
   const ctx = canvas.getContext('2d');
   const grad = ctx.createLinearGradient(0,0,1080,1350);
-  grad.addColorStop(0,'#EA323C'); grad.addColorStop(1,'#B9151F');
+  grad.addColorStop(0,'#C97B4A'); grad.addColorStop(1,'#7A3F22');
   ctx.fillStyle = grad; ctx.fillRect(0,0,1080,1350);
 
   ctx.fillStyle = '#fff';
