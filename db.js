@@ -341,16 +341,16 @@ async function submitConfession(){
   const txt = document.getElementById('confessionText').value.trim();
   if(!txt){ toast('اكتب اعترافك أولاً'); return; }
   const anon = document.getElementById('confessionAnonToggle').classList.contains('on');
-  const row = { text:txt, anon };
-  if(!anon){
-    row.user_id = currentUser.id;
-    row.user_name = currentUser.name;
-    row.user_initials = currentUser.initials;
-    row.user_avatar = currentUser.avatar_url || null;
-  }
+  const row = {
+    text:txt, anon,
+    user_id: currentUser.id,
+    user_name: currentUser.name,
+    user_initials: currentUser.initials,
+    user_avatar: currentUser.avatar_url || null
+  };
   const { error } = await sb.from('confessions').insert([row]);
   if(error){ toast('❌ ما قدرنا ننشر الاعتراف: ' + error.message); console.warn(error.message); return; }
-  toast(anon ? '🎭 تم نشر اعترافك بشكل مجهول بالكامل' : '🎭 تم نشر اعترافك باسمك');
+  toast(anon ? '🎭 تم نشر اعترافك بشكل مجهول بالكامل للآخرين' : '🎭 تم نشر اعترافك باسمك');
   document.getElementById('confessionText').value = '';
   closeSheet();
   loadConfessions();
@@ -381,7 +381,32 @@ async function viewProfile(userId){
   if(!userId) return;
   const { data, error } = await sb.from('profiles').select('*').eq('id', userId).single();
   if(error || !data){ toast('تعذّر فتح هذا الحساب'); return; }
-  renderProfileSheet(data);
+
+  const isMe = userId === currentUser.id;
+
+  const { count: followerCount } = await sb.from('follows')
+    .select('follower_id', { count:'exact', head:true }).eq('following_id', userId);
+
+  // أسئلته: العلنية يشوفها الكل، المجهولة يشوفها هو بس (نفس منطق يحدد اسمه بالمنشور)
+  let qQuery = sb.from('posts').select('*').eq('asked_by', userId).eq('type','qa').order('created_at',{ascending:false});
+  if(!isMe) qQuery = qQuery.eq('anon', false);
+  const { data: userQuestions } = await qQuery;
+
+  // اقتباساته: دايماً علنية
+  const { data: userQuotes } = await sb.from('posts').select('*').eq('author_id', userId).eq('type','quote').order('created_at',{ascending:false});
+
+  // اعترافاته: العلنية يشوفها الكل، المجهولة يشوفها هو بس
+  let cQuery = sb.from('confessions').select('*').eq('user_id', userId).order('created_at',{ascending:false});
+  if(!isMe) cQuery = cQuery.eq('anon', false);
+  const { data: userConfessions } = await cQuery;
+
+  renderProfileSheet(data, {
+    isMe,
+    followerCount: followerCount || 0,
+    questions: userQuestions || [],
+    quotes: userQuotes || [],
+    confessions: userConfessions || []
+  });
   document.getElementById('overlay').classList.add('show');
   document.getElementById('profileSheet').classList.add('show');
 }

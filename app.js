@@ -382,18 +382,63 @@ function renderThread(){
 }
 
 // ---- شيت زيارة حساب شخص ----
-function renderProfileSheet(p){
-  const isMe = p.id === currentUser.id;
+function renderProfileSheet(p, info){
+  const isMe = info.isMe;
+  const qCount = info.questions.length;
+
+  const questionsHTML = info.questions.length === 0
+    ? `<div class="empty-state" style="padding:16px;">${isMe ? 'ما سألت أي سؤال بعد' : 'ما نشر أسئلة علنية بعد'}</div>`
+    : info.questions.map(q => `
+      <div class="inbox-item" style="cursor:default;">
+        <div class="dot" style="background:${q.anon?'var(--ink-muted)':'var(--red)'};"></div>
+        <div style="flex:1;">
+          <div style="font-size:12px; line-height:1.4; color:var(--ink);">${q.q}${q.anon ? ' <span class="muted" style="font-size:9.5px;">(مجهول — يظهر لك بس)</span>' : ''}</div>
+          <div class="muted" style="font-size:9.5px; margin-top:2px;">${q.a ? 'متجاوب عليه' : 'بانتظار إجابة'} — ${timeAgo(q.created_at)}</div>
+        </div>
+      </div>
+    `).join('');
+
+  const quotesHTML = info.quotes.length === 0
+    ? `<div class="empty-state" style="padding:16px;">ما نشر اقتباسات بعد</div>`
+    : info.quotes.map(qt => `
+      <div class="inbox-item" style="cursor:default;">
+        <div style="flex:1; font-size:12px; color:var(--ink); line-height:1.5;">❝ ${qt.text}</div>
+      </div>
+    `).join('');
+
+  const confessionsHTML = info.confessions.length === 0
+    ? `<div class="empty-state" style="padding:16px;">${isMe ? 'ما سجّلت اعترافات بعد' : 'ما نشر اعترافات علنية بعد'}</div>`
+    : info.confessions.map(c => `
+      <div class="inbox-item" style="cursor:default;">
+        <div style="flex:1; font-size:12px; color:var(--ink); line-height:1.5;">🎭 ${c.text}${c.anon ? ' <span class="muted" style="font-size:9.5px;">(مجهول — يظهر لك بس)</span>' : ''}</div>
+      </div>
+    `).join('');
+
   document.getElementById('profileSheetBody').innerHTML = `
     <div style="text-align:center;">
       ${avatarHtml(p.avatar_url, p.initials, '')}
       <div class="profile-name" style="justify-content:center; margin-top:10px;">${p.name} ${p.vip?'<span class="vip-badge">VIP</span>':''}</div>
       ${!isMe ? `
-      <div style="display:flex; gap:8px; margin-top:16px;">
+      <div style="display:flex; gap:8px; margin-top:14px;">
         <button class="btn-primary" style="margin-top:0;" onclick="toggleFollow('${p.id}')">${followingIds.has(p.id)?'إلغاء المتابعة':'متابعة'}</button>
         <button class="btn-primary" style="margin-top:0; background:var(--ink);" onclick="closeSheet(); openThread('${p.id}','${p.name.replace(/'/g,"\\'")}','${p.initials}', ${p.avatar_url?`'${p.avatar_url}'`:'null'})">💬 مراسلة</button>
-      </div>` : `<div class="muted" style="margin-top:10px; font-size:12px;">هذا حسابك أنت</div>`}
+      </div>` : `<div class="muted" style="margin-top:8px; font-size:12px;">هذا حسابك أنت</div>`}
     </div>
+
+    <div class="stat-card" style="margin-top:16px;">
+      <div><b>${info.followerCount}</b><span>متابع</span></div>
+      <div><b>${qCount}</b><span>سؤال</span></div>
+      <div><b>${info.quotes.length}</b><span>اقتباس</span></div>
+    </div>
+
+    <div class="eyebrow">أسئلته ❓</div>
+    <div class="card" style="padding:2px 12px; max-height:180px; overflow-y:auto;">${questionsHTML}</div>
+
+    <div class="eyebrow">اقتباساته ❝</div>
+    <div class="card" style="padding:2px 12px; max-height:180px; overflow-y:auto;">${quotesHTML}</div>
+
+    <div class="eyebrow">اعترافاته 🎭</div>
+    <div class="card" style="padding:2px 12px; max-height:180px; overflow-y:auto;">${confessionsHTML}</div>
   `;
 }
 
