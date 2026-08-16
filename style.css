@@ -1,36 +1,36 @@
   :root{
-    /* ============ الهوية الجديدة: "أرشيف الرسائل" — ورق قديم، حبر، طوابع بريد ============ */
-    /* خشب/جلد الطاولة (خلفية التطبيق خلف الورقة) */
-    --night-1:#5B3E28;
-    --night-2:#3B2818;
-    --night-3:#241608;
-    --app-bg: linear-gradient(165deg, var(--night-1) 0%, var(--night-2) 55%, var(--night-3) 100%);
+    /* ============ الهوية الجديدة: "المسا" — ليل، سراج، اعتراف ============ */
+    /* ألوان الليل (خلفية التطبيق) */
+    --night-1:#2C2557;
+    --night-2:#1B1735;
+    --night-3:#0D0B1C;
+    --app-bg: linear-gradient(165deg, var(--night-1) 0%, var(--night-2) 52%, var(--night-3) 100%);
 
-    /* لون أساسي: أحمر الشمع (الختم البريدي) — نفس أسماء المتغيرات القديمة */
-    --red:#A8422F;
-    --red-light:#C96448;
-    --red-deep:#7A2B1E;
-    --red-soft: rgba(59,40,24,0.08);
+    /* لون أساسي: نحاس/سراج دافئ (يحل محل الأحمر القديم — نفس أسماء المتغيرات) */
+    --red:#D7A24C;
+    --red-light:#EAC276;
+    --red-deep:#AD7B2C;
+    --red-soft: rgba(247,241,228,0.14);
 
-    /* لون ثانوي: نحاسي/دمغة بريد (شارات، تنبيهات) */
-    --orange:#B8863A;
+    /* لون ثانوي: عنّابي جوهري (شارات، تنبيهات) */
+    --orange:#C24F6B;
 
-    /* ألوان الفئات — كل قسم بطابعه الخاص */
-    --teal:#5C7A52;    /* الاقتباسات — أخضر ورقي */
-    --violet:#7D5A78;  /* الاعترافات — بنفسجي غبار */
+    /* ألوان الفئات — كل قسم بهويته */
+    --teal:#3E8478;    /* الاقتباسات */
+    --violet:#8465AF;  /* الاعترافات */
 
     /* الورق والحبر */
-    --paper:#F3E8CD;
-    --paper-soft:#E8D8AE;
-    --ink:#3A2A18;
-    --ink-muted:#8A7355;
-    --on-red:#F3E8CD;
-    --on-red-muted: rgba(243,232,205,0.76);
-    --line-on-white: rgba(58,42,24,0.18);
+    --paper:#F7F1E3;
+    --paper-soft:#ECE0C8;
+    --ink:#251F30;
+    --ink-muted:#8C8296;
+    --on-red:#F7F1E3;
+    --on-red-muted: rgba(247,241,228,0.76);
+    --line-on-white: rgba(37,31,48,0.14);
 
     /* ظلال */
-    --shadow-ink: 20,13,5;
-    --shadow-gold: 122,43,30;
+    --shadow-ink: 13,10,26;
+    --shadow-gold: 173,123,44;
 
     /* الخطوط */
     --font-word:'Aref Ruqaa', serif;
@@ -51,24 +51,24 @@
     *, *::before, *::after{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
   }
 
-  /* ================= نمط غبار الورق والحبر — العنصر المميّز للهوية البصرية ================= */
+  /* ================= نمط النجوم — العنصر المميّز للهوية البصرية ================= */
   .starfield::before{
     content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
     background-image:
-      radial-gradient(1.6px 1.6px at 12% 18%, rgba(233,196,140,0.7), transparent 60%),
-      radial-gradient(1.1px 1.1px at 62% 8%, rgba(233,196,140,0.5), transparent 60%),
-      radial-gradient(1.3px 1.3px at 38% 52%, rgba(184,134,58,0.75), transparent 60%),
-      radial-gradient(1px 1px at 84% 62%, rgba(233,196,140,0.4), transparent 60%),
-      radial-gradient(1.7px 1.7px at 22% 78%, rgba(233,196,140,0.55), transparent 60%),
-      radial-gradient(1px 1px at 72% 84%, rgba(184,134,58,0.5), transparent 60%),
-      radial-gradient(1.3px 1.3px at 52% 34%, rgba(233,196,140,0.4), transparent 60%),
-      radial-gradient(1.1px 1.1px at 6% 58%, rgba(233,196,140,0.35), transparent 60%),
-      radial-gradient(1.4px 1.4px at 92% 28%, rgba(233,196,140,0.45), transparent 60%),
-      radial-gradient(1px 1px at 30% 6%, rgba(233,196,140,0.35), transparent 60%);
+      radial-gradient(1.6px 1.6px at 12% 18%, rgba(247,241,228,0.9), transparent 60%),
+      radial-gradient(1.1px 1.1px at 62% 8%, rgba(247,241,228,0.65), transparent 60%),
+      radial-gradient(1.3px 1.3px at 38% 52%, rgba(215,162,76,0.85), transparent 60%),
+      radial-gradient(1px 1px at 84% 62%, rgba(247,241,228,0.55), transparent 60%),
+      radial-gradient(1.7px 1.7px at 22% 78%, rgba(247,241,228,0.75), transparent 60%),
+      radial-gradient(1px 1px at 72% 84%, rgba(215,162,76,0.6), transparent 60%),
+      radial-gradient(1.3px 1.3px at 52% 34%, rgba(247,241,228,0.55), transparent 60%),
+      radial-gradient(1.1px 1.1px at 6% 58%, rgba(247,241,228,0.5), transparent 60%),
+      radial-gradient(1.4px 1.4px at 92% 28%, rgba(247,241,228,0.6), transparent 60%),
+      radial-gradient(1px 1px at 30% 6%, rgba(247,241,228,0.45), transparent 60%);
     background-repeat:repeat; background-size:230px 230px;
     animation: twinkle 5.5s ease-in-out infinite alternate;
   }
-  @keyframes twinkle{ 0%{ opacity:0.5; } 100%{ opacity:0.9; } }
+  @keyframes twinkle{ 0%{ opacity:0.55; } 100%{ opacity:1; } }
 
   /* ================= AUTH SCREEN ================= */
   #authScreen{
@@ -195,7 +195,7 @@
   .logo-text span{color:var(--red-light);}
   .icon-btn{
     width:34px;height:34px;border-radius:50%; display:flex;align-items:center;justify-content:center;
-    background:rgba(243,232,205,0.12); border:1px solid rgba(184,134,58,0.25); cursor:pointer; font-size:14.5px; color:var(--on-red); position:relative;
+    background:var(--red-soft); border:none; cursor:pointer; font-size:14.5px; color:var(--on-red); position:relative;
     transition: background .15s;
   }
   .icon-btn:active{ transform:scale(0.9); }
@@ -210,17 +210,17 @@
 
   .nav-wrap{ position:fixed; bottom:calc(16px + env(safe-area-inset-bottom)); left:16px; right:16px; display:flex; align-items:center; gap:10px; z-index:20; max-width:460px; margin:0 auto; }
   .bottom-nav{
-    flex:1; height:64px; background:linear-gradient(180deg, #4A3320, #2E1F12); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-radius:14px;
+    flex:1; height:64px; background:rgba(37,31,48,0.92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-radius:23px;
     display:flex; align-items:center; justify-content:space-around;
-    box-shadow:0 14px 34px rgba(var(--shadow-ink),0.5); border:1px solid rgba(184,134,58,0.28);
+    box-shadow:0 14px 34px rgba(var(--shadow-ink),0.5); border:1px solid rgba(215,162,76,0.18);
   }
-  .nav-item{ display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; color:rgba(243,232,205,0.5); padding:6px 10px; border-radius:10px; transition:color .15s; }
-  .nav-item.active{ color:var(--orange); }
+  .nav-item{ display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; color:rgba(247,241,228,0.55); padding:6px 10px; border-radius:14px; transition:color .15s; }
+  .nav-item.active{ color:var(--red-light); }
   .nav-item .ic{ font-size:17px; }
   .nav-item .lb{ font-size:8.5px; font-weight:700; }
   .nav-fab{
-    width:58px;height:58px; border-radius:50%; background:radial-gradient(ellipse at 35% 30%, var(--red-light), var(--red) 55%, var(--red-deep) 100%); display:flex;align-items:center;justify-content:center;
-    color:#FBEEDD; font-size:27px; box-shadow:0 12px 28px rgba(var(--shadow-gold),0.45), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -3px 6px rgba(0,0,0,0.2); cursor:pointer; flex-shrink:0; border:2px solid rgba(251,238,221,0.15);
+    width:58px;height:58px; border-radius:19px; background:linear-gradient(150deg,var(--red-light),var(--red) 55%,var(--red-deep)); display:flex;align-items:center;justify-content:center;
+    color:#2A1A05; font-size:27px; box-shadow:0 12px 28px rgba(var(--shadow-gold),0.55), inset 0 1px 0 rgba(255,255,255,0.5); cursor:pointer; flex-shrink:0;
   }
   .nav-fab:active{ transform:scale(0.92); }
 
@@ -284,12 +284,9 @@
   .composer-plus{ width:25px;height:25px;border-radius:50%; background:linear-gradient(135deg,var(--red-light),var(--red-deep)); color:#2A1A05; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
 
   .tile-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; padding-bottom:4px; }
-  .post-tile{ background:#FBF4E2; border:1px dashed rgba(58,42,24,0.28); border-radius:6px; padding:29px 12px 12px 12px; position:relative; text-align:center; animation: cardFadeUp .4s ease both; transition: transform .2s ease, box-shadow .2s ease; box-shadow:0 1px 0 rgba(255,255,255,0.5), 3px 4px 0 rgba(58,42,24,0.06); }
-  .post-tile:hover{ transform:translateY(-3px) rotate(-0.3deg); box-shadow:0 1px 0 rgba(255,255,255,0.5), 4px 8px 14px rgba(var(--shadow-ink),0.16); border-color:rgba(92,122,82,0.55); }
-  .post-tile::after{ content:''; position:absolute; top:6px; left:6px; width:15px; height:19px; border:1px solid rgba(58,42,24,0.3); background:
-      repeating-linear-gradient(90deg, transparent 0 2px, rgba(251,244,226,1) 2px 3px),
-      repeating-linear-gradient(0deg, transparent 0 2px, rgba(251,244,226,1) 2px 3px), rgba(184,134,58,0.16); }
-  .post-tile .type-ic{ position:absolute; top:9px; right:11px; font-size:11px; color:var(--ink-muted); }
+  .post-tile{ background:var(--paper); border:1.5px solid var(--line-on-white); border-radius:18px; padding:29px 12px 12px 12px; position:relative; text-align:center; animation: cardFadeUp .4s ease both; transition: transform .2s ease, box-shadow .2s ease; box-shadow:inset 0 1px 0 rgba(255,255,255,0.6); }
+  .post-tile:hover{ transform:translateY(-3px); box-shadow:inset 0 1px 0 rgba(255,255,255,0.6), 0 12px 24px rgba(var(--shadow-ink),0.14); border-color:rgba(62,132,120,0.4); }
+  .post-tile .type-ic{ position:absolute; top:9px; right:11px; font-size:11px; color:var(--line-on-white); }
   .tile-avatar{
     width:43px;height:43px;border-radius:50%; position:absolute; top:-14px; left:50%; transform:translateX(-50%);
     display:flex; align-items:center; justify-content:center; color:#2A1A05; font-weight:800; font-size:13.5px;
@@ -307,9 +304,8 @@
 
   .open-q-badge{ background:var(--orange); color:#fff; font-size:8.5px; font-weight:800; padding:2px 6px; border-radius:6px; position:absolute; top:9px; left:9px; }
 
-  .card{ background:#FBF4E2; border:1px solid rgba(58,42,24,0.16); border-radius:5px; padding:16px 16px 14px 16px; margin-bottom:14px; position:relative; animation: cardFadeUp .4s ease both; transition: transform .2s ease, box-shadow .2s ease; box-shadow:0 1px 0 rgba(255,255,255,0.5), 2px 3px 0 rgba(58,42,24,0.05); }
-  .card::before{ content:''; position:absolute; inset:5px; border:1px dashed rgba(58,42,24,0.15); border-radius:3px; pointer-events:none; }
-  .card:hover{ transform:translateY(-1px); box-shadow:0 1px 0 rgba(255,255,255,0.5), 3px 6px 14px rgba(var(--shadow-ink),0.14); }
+  .card{ background:var(--paper); border:1.5px solid var(--line-on-white); border-radius:19px; padding:16px; margin-bottom:13px; animation: cardFadeUp .4s ease both; transition: transform .2s ease, box-shadow .2s ease; box-shadow:inset 0 1px 0 rgba(255,255,255,0.6); }
+  .card:hover{ box-shadow:inset 0 1px 0 rgba(255,255,255,0.6), 0 10px 24px rgba(var(--shadow-ink),0.12); }
   .card-head{ display:flex; align-items:center; gap:9px; margin-bottom:10px; }
   .avatar{
     width:37px;height:37px;border-radius:12px; background:linear-gradient(135deg,var(--red-light),var(--orange)); flex-shrink:0;
@@ -327,8 +323,8 @@
   .foot-btn.liked{ color:var(--orange); font-weight:700; }
   .foot-btn:active{ transform:scale(0.94); }
 
-  .quote-card{ border-radius:6px; padding:19px 17px 15px 17px; position:relative; overflow:hidden; background:#FBF4E2; border:1px solid rgba(58,42,24,0.16); border-right:4px solid var(--teal); margin-bottom:14px; animation: cardFadeUp .4s ease both; transition: transform .2s ease, box-shadow .2s ease; box-shadow:0 1px 0 rgba(255,255,255,0.5), 2px 3px 0 rgba(58,42,24,0.05); }
-  .quote-card:hover{ transform:translateY(-2px); box-shadow:0 1px 0 rgba(255,255,255,0.5), 4px 8px 16px rgba(var(--shadow-ink),0.16); }
+  .quote-card{ border-radius:17px; padding:19px 17px 15px 17px; position:relative; overflow:hidden; background:var(--paper); border:1.5px solid var(--line-on-white); border-right:4px solid var(--teal); margin-bottom:13px; animation: cardFadeUp .4s ease both; transition: transform .2s ease, box-shadow .2s ease; box-shadow:inset 0 1px 0 rgba(255,255,255,0.6); }
+  .quote-card:hover{ transform:translateY(-2px); box-shadow:inset 0 1px 0 rgba(255,255,255,0.6), 0 12px 24px rgba(var(--shadow-ink),0.14); }
   .quote-card::before{ content:'"'; position:absolute; top:-22px; left:8px; font-family:var(--font-word); font-size:84px; font-weight:700; color:var(--paper-soft); line-height:1; z-index:0; }
   .quote-card .qtext{ font-family:var(--font-display); font-weight:600; font-size:17px; line-height:1.6; position:relative; z-index:1; margin-bottom:13px; color:var(--ink); }
   .quote-card .qmeta{ display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; }
@@ -347,8 +343,8 @@
   .people-card span{ font-size:9.5px; color:var(--ink-muted); display:block; line-height:1.4; }
   .d-main .people-grid{ grid-template-columns:repeat(4, 1fr); }
 
-  .confession-card{ background:#FBF4E2; border:1.5px dashed rgba(125,90,120,0.45); border-radius:6px; padding:15px; margin-bottom:14px; animation: cardFadeUp .4s ease both; transition: transform .2s ease, box-shadow .2s ease; box-shadow:0 1px 0 rgba(255,255,255,0.5), 2px 3px 0 rgba(58,42,24,0.05); }
-  .confession-card:hover{ transform:translateY(-2px); box-shadow:0 1px 0 rgba(255,255,255,0.5), 4px 8px 16px rgba(var(--shadow-ink),0.14); border-color:rgba(125,90,120,0.7); }
+  .confession-card{ background:var(--paper); border:1.5px dashed rgba(132,101,175,0.4); border-radius:17px; padding:15px; margin-bottom:13px; animation: cardFadeUp .4s ease both; transition: transform .2s ease, box-shadow .2s ease; box-shadow:inset 0 1px 0 rgba(255,255,255,0.6); }
+  .confession-card:hover{ transform:translateY(-2px); box-shadow:inset 0 1px 0 rgba(255,255,255,0.6), 0 12px 24px rgba(var(--shadow-ink),0.12); border-color:rgba(132,101,175,0.65); }
   .conf-head{ display:flex; align-items:center; gap:8px; margin-bottom:9px; }
   .conf-ghost{ width:31px;height:31px;border-radius:50%; background:rgba(132,101,175,0.14); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
   .conf-head b{ font-family:var(--font-display); font-size:13.5px; color:var(--ink); }
@@ -390,7 +386,7 @@
   .toggle.on{ background:var(--red); }
   .toggle-dot{ width:18px;height:18px;border-radius:50%; background:#fff; position:absolute; top:3px; right:3px; transition:.2s; }
   .toggle.on .toggle-dot{ right:21px; }
-  .btn-primary{ background:radial-gradient(ellipse at 35% 30%, var(--red-light), var(--red) 55%, var(--red-deep) 100%); color:#FBEEDD; border:none; border-radius:15px; padding:13px; width:100%; font-family:var(--font-display); font-weight:700; font-size:15.5px; cursor:pointer; margin-top:6px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -3px 6px rgba(0,0,0,0.18); letter-spacing:0.3px; }
+  .btn-primary{ background:linear-gradient(150deg,var(--red-light),var(--red) 60%,var(--red-deep)); color:#2A1A05; border:none; border-radius:15px; padding:13px; width:100%; font-family:var(--font-display); font-weight:700; font-size:15.5px; cursor:pointer; margin-top:6px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.4); }
   .btn-primary:active{ transform:scale(0.98); }
   .btn-primary:disabled{ opacity:0.6; cursor:default; }
   .btn-ghost{ background:transparent; border:1.5px solid var(--line-on-white); color:var(--ink); border-radius:15px; padding:11px; width:100%; font-family:var(--font-display); font-weight:700; font-size:13.5px; cursor:pointer; margin-top:8px; transition:border-color .15s, background .15s; }
@@ -585,109 +581,3 @@
     0%{ background-position:0% 50%; }
     100%{ background-position:300% 50%; }
   }
-
-  /* ================= ملمس حبيبات الورق (SVG noise) — واقعية أعلى ================= */
-  html, body{
-    background-color: var(--night-2);
-    background-image:
-      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(0,0,0,0.25), transparent 60%),
-      radial-gradient(ellipse 900px 500px at 85% 110%, rgba(0,0,0,0.3), transparent 60%);
-  }
-  .auth-card, .content, .d-body, .sheet, #setupNotice .box, .confirm-modal, .ios-install-modal, .install-banner,
-  .card, .quote-card, .confession-card, .post-tile, .note-stack{
-    background-image:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.23  0 0 0 0 0.16  0 0 0 0 0.09  0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-      radial-gradient(ellipse 340px 220px at 12% 6%, rgba(122,43,30,0.05), transparent 60%),
-      radial-gradient(ellipse 300px 240px at 92% 96%, rgba(58,42,24,0.06), transparent 60%),
-      radial-gradient(ellipse 200px 160px at 70% 20%, rgba(184,134,58,0.05), transparent 60%);
-  }
-
-  /* ================= الطوابع البريدية المُسنّنة (perforated stamps) ================= */
-  .stamp{
-    position:absolute; top:10px; left:12px; width:36px; height:42px; z-index:2;
-    display:flex; align-items:center; justify-content:center; font-size:16px; color:#fff;
-    background:var(--orange);
-    box-shadow:2px 3px 5px rgba(20,13,5,0.28);
-    transform:rotate(-3deg);
-  }
-  .stamp::after{
-    content:''; position:absolute; inset:3px; border:1.5px dotted rgba(255,255,255,0.85); pointer-events:none;
-  }
-  .stamp-q{ background:linear-gradient(150deg,#C1854F,#8A5A2C); }
-  .stamp-shout{ background:linear-gradient(150deg,#C6596B,#8C2E3F); }
-  .stamp-quote{ position:static; float:left; margin:0 0 8px 10px; transform:rotate(3deg); background:linear-gradient(150deg,#7C9A6E,var(--teal)); }
-  .stamp-confession{ background:linear-gradient(150deg,#9A7796,var(--violet)); }
-  [dir="rtl"] .stamp{ left:auto; right:12px; transform:rotate(3deg); }
-  [dir="rtl"] .stamp-quote{ float:right; margin:0 10px 8px 0; transform:rotate(-3deg); }
-  .card, .confession-card{ padding-top:20px; }
-  .card:has(.stamp){ padding-inline-end:56px; }
-
-  /* ================= حافة بريد جوي مخططة (الأحمر/الأزرق) على حافة البطاقات ================= */
-  .card, .confession-card{ position:relative; }
-  .card::after, .confession-card::after{
-    content:''; position:absolute; top:8px; bottom:8px; inset-inline-end:0; width:5px;
-    background:repeating-linear-gradient(-45deg, #A8422F 0 6px, var(--paper) 6px 9px, #3E5C8A 9px 15px, var(--paper) 15px 18px);
-    opacity:0.55; border-radius:0 4px 4px 0;
-  }
-
-  /* ================= ختم الشمع الرسمي (Postmark) بأعلى الهيدر ================= */
-  .postmark{
-    width:46px; height:46px; border-radius:50%; flex-shrink:0; position:relative;
-    background:radial-gradient(ellipse at 35% 30%, #EAD9AE, #D8C089 60%, #B89A5F 100%);
-    border:2px dashed rgba(58,42,24,0.35);
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:inset 0 0 0 3px rgba(58,42,24,0.06), 0 2px 5px rgba(0,0,0,0.25);
-  }
-  .postmark span{ font-family:var(--font-word); font-weight:700; font-size:11px; color:rgba(58,42,24,0.65); letter-spacing:0.5px; }
-
-  /* ================= شعار الهيدر + الوصف المموّج ================= */
-  .d-header .logo{ display:flex; align-items:center; gap:12px; }
-  .d-tagline{ font-family:var(--font-display); font-size:11.5px; line-height:1.5; color:var(--on-red-muted); position:relative; padding-inline-end:14px; }
-  .d-tagline::after{
-    content:''; position:absolute; bottom:-6px; right:0; width:60px; height:8px;
-    background-image: radial-gradient(circle 3px at 6px 4px, transparent 2.4px, rgba(184,134,58,0.6) 2.6px 3px, transparent 3.2px);
-    background-size:14px 8px; background-repeat:repeat-x; opacity:0.8;
-  }
-  @media (max-width:1180px){ .d-tagline{ display:none; } }
-
-  /* ================= رزمة "الاقتباس المميز" — أوراق مكدّسة + مشبك ورق ================= */
-  .note-stack{
-    position:relative; background:var(--paper); border:1px solid var(--line-on-white); border-radius:3px;
-    padding:16px 13px 13px 13px; margin:20px 10px 22px 10px;
-    box-shadow:
-      3px 4px 0 var(--paper-soft), 3px 4px 0 1px rgba(58,42,24,0.15),
-      6px 8px 0 #EFE1BE, 6px 8px 0 1px rgba(58,42,24,0.1),
-      0 10px 18px rgba(var(--shadow-ink),0.25);
-    transform:rotate(-1deg);
-  }
-  .paperclip{
-    position:absolute; top:-16px; left:16px; width:20px; height:34px; z-index:3;
-    border:3px solid #9AA3AD; border-radius:10px 10px 9px 9px / 12px 12px 8px 8px;
-    border-bottom:none; transform:rotate(-8deg);
-    box-shadow:1px 1px 2px rgba(0,0,0,0.3);
-  }
-  .paperclip::after{
-    content:''; position:absolute; top:6px; left:-3px; width:14px; height:20px;
-    border:3px solid #9AA3AD; border-top:none; border-radius:0 0 8px 8px;
-  }
-
-  /* ختم بريد زخرفي أعلى بطاقة الدخول */
-  .auth-card{ position:relative; }
-  .auth-card::after{
-    content:''; position:absolute; top:14px; left:14px; width:34px; height:34px; border-radius:50%;
-    background:radial-gradient(ellipse at 35% 30%, var(--red-light), var(--red) 55%, var(--red-deep) 100%);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 6px rgba(0,0,0,0.25);
-    opacity:0.9;
-  }
-
-  /* حافة مسنّنة أعلى ورقة المحتوى — توحي بحافة طابع بريد */
-  .content, .d-body{
-    border-top: 1px dashed rgba(58,42,24,0.2);
-  }
-
-  /* شارة الطوابع فوق كل بطاقة اقتباس */
-  .quote-card::before{ color:rgba(58,42,24,0.08); }
-
-  /* أزرار الدخول والحقول — لمسة ورقية */
-  .auth-field input, textarea, input[type=text]{ background:rgba(232,216,174,0.55); }
-  .explore-search{ background:rgba(232,216,174,0.55); }
