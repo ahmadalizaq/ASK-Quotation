@@ -401,9 +401,8 @@
   .inbox-item:last-child{ border-bottom:none; }
   .dot{ width:7px;height:7px;border-radius:50%; background:var(--orange); flex-shrink:0; }
 
-  .profile-cover{ height:76px; background:linear-gradient(120deg,var(--night-2),var(--night-1)); margin:-16px -18px 0 -18px; position:relative; overflow:hidden; }
-  .profile-cover::after{ content:''; position:absolute; inset:0; background-image: radial-gradient(1.3px 1.3px at 15% 40%, rgba(247,241,228,0.7), transparent 60%), radial-gradient(1px 1px at 50% 70%, rgba(215,162,76,0.7), transparent 60%), radial-gradient(1.2px 1.2px at 80% 30%, rgba(247,241,228,0.6), transparent 60%), radial-gradient(1px 1px at 65% 15%, rgba(247,241,228,0.5), transparent 60%); }
-  .profile-header{ text-align:center; padding:0 0 6px 0; margin-top:-36px; position:relative; }
+  .profile-cover{ height:56px; background:linear-gradient(120deg, rgba(184,134,58,0.22), rgba(168,66,47,0.16)); margin:-16px -18px 0 -18px; position:relative; overflow:hidden; border-radius:0 0 16px 16px; }
+  .profile-header{ text-align:center; padding:0 0 6px 0; margin-top:-26px; position:relative; }
   .profile-avatar{
     width:78px;height:78px;border-radius:24px; background:linear-gradient(135deg,var(--red-light),var(--orange)); margin:0 auto 8px auto;
     display:flex;align-items:center;justify-content:center; font-family:var(--font-display); font-weight:800; font-size:28px; color:#2A1A05;
