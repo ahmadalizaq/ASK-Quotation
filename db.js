@@ -108,6 +108,7 @@ async function logout(){
   if(isGuest){
     isGuest = false;
     currentUser = null;
+    if(sb) sb.removeAllChannels();
     document.body.classList.remove('app-active');
     const banner = document.getElementById('guestBanner');
     if(banner) banner.style.display = 'none';
@@ -115,6 +116,7 @@ async function logout(){
     return;
   }
   await sb.auth.signOut();
+  sb.removeAllChannels();
   currentUser = null;
   document.body.classList.remove('app-active');
   document.getElementById('authScreen').style.display = 'flex';
@@ -192,6 +194,9 @@ function requireLogin(){
 
 // ريل تايم محدود للزائر (بدون قنوات الإشعارات/الرسائل الخاصة بحساب معين)
 function subscribeRealtimeGuest(){
+  // نشيل أي قنوات سابقة أولاً — لو المستخدم دخل كزائر أكثر من مرة بنفس تحميل الصفحة،
+  // Supabase يرفض تسجيل مستمعين جدد على قناة بنفس الاسم مشتركة (subscribed) أصلاً
+  sb.removeAllChannels();
   sb.channel('posts-changes-guest').on('postgres_changes', { event:'*', schema:'public', table:'posts' }, () => loadPosts()).subscribe();
   sb.channel('confessions-changes-guest').on('postgres_changes', { event:'*', schema:'public', table:'confessions' }, () => loadConfessions()).subscribe();
   sb.channel('answers-changes-guest').on('postgres_changes', { event:'*', schema:'public', table:'answers' }, async () => {
@@ -289,6 +294,9 @@ async function loadConversations(){
 }
 
 function subscribeRealtime(){
+  // نفس السبب أعلاه: نضمن ما فيه قنوات معلّقة من جلسة سابقة (خصوصاً بعد تسجيل خروج ثم دخول
+  // من نفس الصفحة بدون تحديث كامل) قبل ما نسجّل مستمعين جدد
+  sb.removeAllChannels();
   sb.channel('posts-changes').on('postgres_changes', { event:'*', schema:'public', table:'posts' }, () => loadPosts()).subscribe();
   sb.channel('confessions-changes').on('postgres_changes', { event:'*', schema:'public', table:'confessions' }, () => loadConfessions()).subscribe();
   sb.channel('answers-changes').on('postgres_changes', { event:'*', schema:'public', table:'answers' }, async () => {
