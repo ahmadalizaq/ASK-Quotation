@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>QQC — أسئلة، اقتباسات، اعترافات</title>
 <meta name="description" content="QQC — منصة عربية لطرح الأسئلة، مشاركة الاقتباسات، والاعتراف بصراحة (باسمك أو مجهول) مع مجتمع حقيقي.">
-<meta name="theme-color" content="#1B1735">
+<meta name="theme-color" content="#3B2818">
 <meta property="og:title" content="QQC — Question · Quote · Confession">
 <meta property="og:description" content="اسأل، شارك اقتباساتك، واعترف بصراحة — باسمك أو مجهول بالكامل.">
 <meta property="og:type" content="website">
@@ -20,6 +20,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Markazi+Text:wght@500;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // لو jsDelivr محجوب أو فشل التحميل، نجرب CDN بديل (unpkg) قبل ما نكمل —
+  // document.write هنا آمن لأننا لسا داخل تحليل الصفحة (parsing)، قبل أي محتوى تحت
+  if (typeof supabase === 'undefined') {
+    document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>');
+  }
+</script>
 </head>
 <body>
 

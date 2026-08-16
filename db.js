@@ -864,7 +864,7 @@ async function initApp(){
     return;
   }
   if(!sb){
-    showBootError('ملف supabase-client.js ما قدر ينشئ اتصال — تأكد إن مكتبة Supabase (من jsDelivr) وصلت تحمّل قبل هذا الملف، وإن ترتيب السكربتات بـ index.html صحيح.');
+    showBootError(window.__sbInitError || 'ملف supabase-client.js ما قدر ينشئ اتصال — تأكد إن مكتبة Supabase وصلت تتحمّل قبل هذا الملف، وإن ترتيب السكربتات بـ index.html صحيح.');
     return;
   }
 
