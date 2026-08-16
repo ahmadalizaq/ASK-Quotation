@@ -712,5 +712,9 @@
       overflow-y:auto; max-height:none;
     }
     .note-stack{ width:100%; height:190px; margin:0 0 4% 0; }
-    .d-sidebar-right > div:not(.note-stack){ background:rgba(251,244,226,0.55); border-radius:8px; padding:3%; }
+    .d-sidebar-right > div:not(.note-stack){ background:transparent; }
+
+    /* إخفاء شريط التمرير الرمادي القبيح — التمرير يشتغل زي ما هو، بس بدون خط رمادي يكسر شكل الورق */
+    .d-main, .d-sidebar-left, .d-sidebar-right{ scrollbar-width:none; -ms-overflow-style:none; }
+    .d-main::-webkit-scrollbar, .d-sidebar-left::-webkit-scrollbar, .d-sidebar-right::-webkit-scrollbar{ display:none; width:0; height:0; }
   }
