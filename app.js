@@ -790,9 +790,73 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// نلغي أي Service Worker قديم مسجّل من قبل (كان سبب مشكلة الكاش العالق) —
-// يضمن إن أي زائر عنده نسخة قديمة مكسورة محفوظة، تنشال تلقائياً.
+// نسجّل الـ Service Worker (بدون أي كاش — شوف sw.js) — لازم يكون مسجّل عشان
+// المتصفح (خصوصاً أندرويد/كروم/سامسونج) يعتبر الموقع "قابل للتثبيت" كتطبيق.
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(reg => reg.unregister()));
-  if(window.caches){ caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+
+// ================= تثبيت التطبيق على الشاشة الرئيسية =================
+let deferredInstallPrompt = null;
+const INSTALL_DISMISS_KEY = 'qqc_install_dismissed';
+
+function isStandaloneApp(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function isIOSDevice(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+
+// كروم/سامسونج إنترنت وأي متصفح Chromium بأندرويد يطلق هذا الحدث تلقائياً
+// لما يتأكد إن الموقع قابل للتثبيت — نمنع البانر الافتراضي ونعرض بانرنا المخصص بدلاً منه
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  maybeShowInstallBanner();
+});
+window.addEventListener('appinstalled', () => {
+  hideInstallBanner();
+  deferredInstallPrompt = null;
+});
+
+function maybeShowInstallBanner(){
+  if(isStandaloneApp()) return; // مثبت أصلاً
+  if(localStorage.getItem(INSTALL_DISMISS_KEY)) return; // المستخدم سكّرها قبل
+  document.getElementById('installBanner').style.display = 'flex';
+}
+function hideInstallBanner(){
+  const el = document.getElementById('installBanner');
+  if(el) el.style.display = 'none';
+}
+function dismissInstallBanner(){
+  hideInstallBanner();
+  try{ localStorage.setItem(INSTALL_DISMISS_KEY, '1'); }catch(e){}
+}
+async function handleInstallClick(){
+  if(deferredInstallPrompt){
+    // أندرويد/سامسونج/كروم: نطلب نافذة التثبيت الأصلية من المتصفح نفسه
+    deferredInstallPrompt.prompt();
+    const choice = await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    hideInstallBanner();
+    if(choice && choice.outcome === 'accepted'){ toast('✅ جاري تثبيت التطبيق'); }
+  } else if(isIOSDevice()){
+    // آيفون: ما فيه API تلقائي، نعرض خطوات الإضافة اليدوية من Safari
+    openIosInstallModal();
+  } else {
+    toast('افتح الموقع من متصفح Safari (آيفون) أو Chrome (أندرويد) للتثبيت');
+  }
+}
+function openIosInstallModal(){
+  document.getElementById('iosInstallOverlay').classList.add('show');
+  document.getElementById('iosInstallModal').classList.add('show');
+}
+function closeIosInstallModal(){
+  document.getElementById('iosInstallOverlay').classList.remove('show');
+  document.getElementById('iosInstallModal').classList.remove('show');
+}
+
+// آيفون ما يطلق beforeinstallprompt أبداً — نعرضله بانرنا يدوياً بعد ثانيتين من فتح الصفحة
+if(isIOSDevice() && !isStandaloneApp() && !localStorage.getItem(INSTALL_DISMISS_KEY)){
+  setTimeout(maybeShowInstallBanner, 1500);
 }

@@ -10,6 +10,12 @@
 <meta property="og:description" content="اسأل، شارك اقتباساتك، واعترف بصراحة — باسمك أو مجهول بالكامل.">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23A8592E'/%3E%3Ctext x='50' y='68' font-size='48' font-family='Georgia,serif' font-weight='bold' fill='%23FBF3E7' text-anchor='middle'%3EQ%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="QQC">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -270,6 +276,41 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- بانر تثبيت التطبيق على الشاشة الرئيسية -->
+<div class="install-banner" id="installBanner" style="display:none;">
+  <div class="install-banner-icon">📲</div>
+  <div class="install-banner-text">
+    <b>ثبّت QQC على شاشتك الرئيسية</b>
+    <span>يفتح مباشرة زي أي تطبيق، بدون متصفح</span>
+  </div>
+  <button class="install-banner-btn" onclick="handleInstallClick()">تثبيت</button>
+  <div class="install-banner-close" onclick="dismissInstallBanner()" aria-label="إغلاق" role="button" tabindex="0">✕</div>
+</div>
+
+<!-- تعليمات آيفون (Safari ما يدعم تثبيت تلقائي، لازم خطوات يدوية) -->
+<div class="modal-overlay" id="iosInstallOverlay" onclick="closeIosInstallModal()"></div>
+<div class="ios-install-modal" id="iosInstallModal">
+  <div class="sheet-close" style="position:absolute; top:14px; left:14px;" onclick="closeIosInstallModal()" aria-label="إغلاق" role="button" tabindex="0">✕</div>
+  <div style="text-align:center;">
+    <div class="qqc-logo" style="font-size:26px; display:inline-flex;">QQC</div>
+    <h3 style="font-family:'El Messiri',sans-serif; font-size:16px; margin:14px 0 4px 0; color:var(--ink);">ثبّت QQC على شاشتك الرئيسية</h3>
+    <p class="muted" style="font-size:12px; margin-bottom:16px;">3 خطوات بسيطة على Safari:</p>
+  </div>
+  <div class="ios-step">
+    <div class="ios-step-num">1</div>
+    <div>اضغط زر <b>المشاركة</b> <span class="ios-share-ic">⬆️</span> بأسفل شاشة Safari</div>
+  </div>
+  <div class="ios-step">
+    <div class="ios-step-num">2</div>
+    <div>مرّر لتحت واختر <b>"إضافة إلى الشاشة الرئيسية"</b><br><span class="muted" style="font-size:10.5px;">Add to Home Screen</span></div>
+  </div>
+  <div class="ios-step">
+    <div class="ios-step-num">3</div>
+    <div>اضغط <b>"إضافة"</b> بأعلى يمين الشاشة — خلاص</div>
+  </div>
+  <div class="muted" style="font-size:10.5px; text-align:center; margin-top:14px;">ملاحظة: الخطوات تشتغل من متصفح Safari — إذا تتصفح من داخل تطبيق ثاني (إنستقرام مثلاً)، افتح الرابط بـ Safari أولاً.</div>
+</div>
 
 <script src="config.js"></script>
 <script src="supabase-client.js"></script>
