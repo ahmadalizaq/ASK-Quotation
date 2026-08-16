@@ -607,7 +607,8 @@
   }
   .stamp-q{ width:73px; height:74px; background-position:-359px -924px; }
   .stamp-shout{ width:72px; height:73px; background-position:-450px -925px; }
-  .stamp-quote{ width:72px; height:73px; background-position:-540px -925px; position:static; float:left; margin:0 0 8px 10px; transform:rotate(4deg); filter: drop-shadow(1px 2px 3px rgba(20,13,5,0.25)); }
+  .stamp-quote{ width:72px; height:73px; background-position:-540px -925px; top:14px; }
+  .quote-card{ padding-top:24px; }
   .stamp-confession{ width:71px; height:73px; background-position:-631px -925px; }
   [dir="rtl"] .stamp{ left:auto; right:10px; transform:rotate(4deg); }
   [dir="rtl"] .stamp-quote{ float:right; margin:0 10px 8px 0; transform:rotate(-4deg); }
@@ -651,15 +652,6 @@
   }
   .note-stack > *{ position:relative; z-index:1; }
 
-  /* ختم بريد زخرفي أعلى بطاقة الدخول */
-  .auth-card{ position:relative; }
-  .auth-card::after{
-    content:''; position:absolute; top:14px; left:14px; width:34px; height:34px; border-radius:50%;
-    background:radial-gradient(ellipse at 35% 30%, var(--red-light), var(--red) 55%, var(--red-deep) 100%);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 6px rgba(0,0,0,0.25);
-    opacity:0.9;
-  }
-
   /* حافة مسنّنة أعلى ورقة المحتوى — توحي بحافة طابع بريد */
   .content, .d-body{
     border-top: 1px dashed rgba(58,42,24,0.2);
@@ -671,3 +663,54 @@
   /* أزرار الدخول والحقول — لمسة ورقية */
   .auth-field input, textarea, input[type=text]{ background:rgba(232,216,174,0.55); }
   .explore-search{ background:rgba(232,216,174,0.55); }
+
+  /* ================================================================
+     تصميم الديسكتوب — نفس صورتك بالضبط كخلفية ثابتة بدون أي قص أو تعديل،
+     وكل عنصر حقيقي (بحث، بطاقات، قوائم) يترتب فوقها بمكانه المطابق تماماً
+     ================================================================ */
+  @media (min-width:980px){
+    .app-desktop{
+      position:relative; display:block; width:100%; max-width:1672px; margin:0 auto;
+      aspect-ratio:1672/941; min-height:0; height:auto;
+      background:url("assets/postal-bg.png") no-repeat center/100% 100%;
+    }
+    .d-header{ position:absolute; inset:0 0 auto 0; height:16%; padding:0; display:block; }
+    .d-header .logo{ position:absolute; left:23%; top:0; width:45%; height:100%; display:flex; align-items:center; justify-content:center; gap:0; }
+    .d-header .logo .qqc-logo-sm{ font-size:clamp(20px,2.6vw,34px); background:linear-gradient(135deg,var(--red-deep),var(--red)); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 1px 1px rgba(255,255,255,0.3)); }
+    .d-tagline{ display:none; }
+    .d-search{ position:absolute; left:69.5%; top:22%; width:25%; height:58%; max-width:none; }
+    .d-search input{ width:100%; height:100%; background:transparent; border:none; padding:0 22px; font-size:clamp(10px,0.95vw,13px); color:var(--ink); }
+    .d-search input::placeholder{ color:rgba(58,42,24,0.55); }
+    .d-header-actions{ position:absolute; left:0.8%; top:2%; width:17%; height:9%; margin:0; gap:8%; justify-content:flex-start; }
+    .postmark{ display:none; } /* الختم موجود أصلاً مرسوم بالخلفية بالعمود اليمين، ما نكرره بالهيدر */
+    .d-coin-chip{ background:transparent; border:none; color:var(--ink); font-family:var(--font-display); font-weight:700; font-size:clamp(9px,0.85vw,12px); padding:0; }
+    .d-header .icon-btn{ background:transparent; border:none; color:var(--ink); width:clamp(26px,2.4vw,34px); height:clamp(26px,2.4vw,34px); }
+
+    .d-body{ position:absolute; left:0; top:16%; width:100%; height:84%; display:block; background:none; box-shadow:none; border-radius:0; }
+
+    /* العمود الأيمن بصرياً بالصورة = يمين الشاشة = أول عمود بشبكة RTL = قائمة التنقل عندنا */
+    .d-sidebar-left{
+      position:absolute; left:77%; top:1%; width:22%; height:97%; padding:2% 3%;
+      border:none; overflow-y:auto; justify-content:flex-start; gap:4%;
+    }
+    .d-sidebar-left .btn-primary{ margin:2% 0 6% 0; }
+    .d-nav-item{ background:transparent; padding:3% 6%; }
+    .d-nav-item.active{ background:rgba(168,66,47,0.12); }
+    .d-side-widget{ background:rgba(232,216,174,0.4); }
+
+    /* العمود الأوسط بصرياً = المحتوى الرئيسي */
+    .d-main{
+      position:absolute; left:22.5%; top:18.5%; width:54%; height:80%; padding:0 1%;
+      border:none; overflow-y:auto; max-height:none;
+    }
+    .d-main .page-title{ display:none; } /* الشريط بعنوان الصفحة مو موجود بالتصميم الأصلي — العنوان مفهوم من التبويب النشط باليمين */
+    .d-main .composer-trigger{ margin-top:0; }
+
+    /* العمود الأيسر بصرياً بالصورة = يسار الشاشة = آخر عمود بشبكة RTL = ودجت الاقتباس المميز + الأشخاص */
+    .d-sidebar-right{
+      position:absolute; left:0.5%; top:13%; width:20%; height:85%; padding:0 2%;
+      overflow-y:auto; max-height:none;
+    }
+    .note-stack{ width:100%; height:190px; margin:0 0 4% 0; }
+    .d-sidebar-right > div:not(.note-stack){ background:rgba(251,244,226,0.55); border-radius:8px; padding:3%; }
+  }
