@@ -181,7 +181,7 @@ function switchTab(tab){
 function renderDesktopSidebar(){
   return `
     ${featuredPost ? `
-    <div style="background:var(--paper);border:1.5px solid var(--line-on-white);border-radius:15px;padding:13px;margin-bottom:12px;">
+    <div class="note-stack">
       <span style="font-size:9.5px;font-weight:800;color:var(--red);margin-bottom:7px;display:block;">⭐ الاقتباس المميز اليوم</span>
       <div style="font-family:var(--font-display);font-weight:600;font-size:12px;line-height:1.5;color:var(--ink);">${esc(featuredPost.text)}</div>
       <div class="muted" style="font-size:10px; margin-top:8px;" ${up(featuredPost.anon?null:featuredPost.author_id)}>— ${featuredPost.anon ? 'مجهول' : esc(featuredPost.author_name)}</div>
@@ -308,6 +308,7 @@ function renderQATile(it){
   if(hasAnswers){
     return `
       <div class="card">
+        <div class="stamp stamp-q"></div>
         <div class="card-head">
           <span ${up(it.anon?null:it.asked_by)}>${it.anon ? `<div class="avatar anon">؟</div>` : avatarHtml(it.asker_avatar, it.asker_initials, '')}</span>
           <div class="name-line">
@@ -333,6 +334,7 @@ function renderQATile(it){
   }
   return `
     <div class="card">
+      <div class="stamp stamp-q${it.is_shoutout?' stamp-shout':''}"></div>
       <div class="card-head">
         <span ${up(it.anon?null:it.asked_by)}>${it.anon ? `<div class="avatar anon">؟</div>` : avatarHtml(it.asker_avatar, it.asker_initials, '')}</span>
         <div class="name-line">
@@ -402,6 +404,7 @@ function renderQuotesPage(){
     ${featuredPost ? `
     <div class="eyebrow">⭐ الاقتباس المميز (أعلى لايكات آخر 24 ساعة)</div>
     <div class="quote-card featured-quote" style="border-right-color:var(--orange);">
+      <div class="stamp stamp-quote"></div>
       <div class="qtext">${esc(featuredPost.text)}</div>
       <div class="qmeta">
         <div class="qauthor" ${up(featuredPost.anon?null:featuredPost.author_id)}>
@@ -443,6 +446,7 @@ function renderConfessionCard(c){
   const isOwner = c.user_id === currentUser.id;
   return `
     <div class="confession-card">
+      <div class="stamp stamp-confession"></div>
       <div class="conf-head">
         <span ${up(isAnon?null:c.user_id)}>${isAnon ? `<div class="conf-ghost">🎭</div>` : avatarHtml(c.user_avatar, c.user_initials, 'conf-ghost')}</span>
         <b ${up(isAnon?null:c.user_id)}>${isAnon ? 'اعتراف مجهول' : esc(c.user_name)}</b>
