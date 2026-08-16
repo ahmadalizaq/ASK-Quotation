@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QQC - رسائل من القلب</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Search Header -->
+  <div class="top-header">
+    <div style="display: flex; gap: 10px;">
+      <div class="paper-box" style="padding: 6px 12px; border-radius: 20px;"><i class="fa-regular fa-user"></i></div>
+      <div class="paper-box" style="padding: 6px 12px; border-radius: 20px;"><i class="fa-regular fa-bell"></i></div>
+      <div class="paper-box" style="padding: 6px 12px; border-radius: 20px;"><span class="coin-icon" style="width:20px; height:20px; font-size:10px;">65</span></div>
+    </div>
+    <div class="search-bar-container">
+      <input type="text" placeholder="ابحث عن سؤال، اقتباس أو شخص...">
+      <i class="fa-solid fa-magnifying-glass"></i>
+    </div>
+  </div>
+
+  <div class="app-container">
+
+    <!-- Left Sidebar -->
+    <aside class="left-sidebar">
+      <!-- Quote Box -->
+      <div class="quote-card">
+        <div class="paperclip"></div>
+        <h4 style="color: var(--wax-red); font-size: 14px; margin-bottom: 8px;"><i class="fa-solid fa-heart"></i> الاقتباس المميز اليوم</h4>
+        <p style="font-size: 13px; color: var(--ink-color);">"التي تهمهم سيكونك، ما بتحتاج توضحه كلامك."</p>
+        <span style="font-size: 11px; color: var(--ink-light); display: block; margin-top: 10px;">- مجهول</span>
+      </div>
+
+      <!-- Suggested Users -->
+      <div class="paper-box">
+        <h4 style="font-size: 14px; margin-bottom: 12px;"><i class="fa-solid fa-user-group"></i> أشخاص قد تعرفهم</h4>
+        <div class="user-suggestion-list">
+          <div class="user-suggest-item">
+            <div>
+              <div style="font-size: 13px; font-weight: bold;">حسين العمري</div>
+              <div style="font-size: 10px; color: var(--ink-light);">عضو نشط</div>
+            </div>
+            <button class="follow-btn">متابعة</button>
+          </div>
+          <div class="user-suggest-item">
+            <div>
+              <div style="font-size: 13px; font-weight: bold;">عمر النخلي</div>
+              <div style="font-size: 10px; color: var(--ink-light);">عضو نشط</div>
+            </div>
+            <button class="follow-btn">متابعة</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Feed -->
+    <main class="main-content">
+      <div class="brand-header">
+        <h1>QQC</h1>
+        <p>أسئلة من القلب ... إجابات من الناس</p>
+      </div>
+
+      <!-- Ask Input -->
+      <div class="ask-box">
+        <button style="border:none; background: #e8d7be; padding: 5px 10px; border-radius: 4px; cursor:pointer;"><i class="fa-solid fa-plus"></i></button>
+        <input type="text" placeholder="عندك سؤال؟ اطرحه هنا...">
+        <i class="fa-solid fa-feather-pointed feather-icon"></i>
+      </div>
+
+      <!-- Category Filter Buttons -->
+      <div class="category-filters">
+        <button class="filter-btn active"><i class="fa-solid fa-border-all"></i> الكل</button>
+        <button class="filter-btn"><i class="fa-solid fa-leaf"></i> حكمة</button>
+        <button class="filter-btn"><i class="fa-solid fa-heart"></i> حب</button>
+        <button class="filter-btn"><i class="fa-solid fa-star"></i> صداقة</button>
+        <button class="filter-btn"><i class="fa-solid fa-fire"></i> تحفيز</button>
+      </div>
+
+      <!-- Posts Container -->
+      <div id="posts-feed">
+        <!-- Post Item 1 -->
+        <div class="post-card">
+          <div class="post-stamp">?</div>
+          <div class="post-header">
+            <div style="width:40px; height:40px; background:#e8d7be; border-radius:50%; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-user-secret"></i></div>
+            <div>
+              <div class="post-author">سؤال مجهول</div>
+              <div class="post-time">قبل 1 يوم</div>
+            </div>
+          </div>
+          <div class="post-body">هلا</div>
+          <div class="post-actions">
+            <span><i class="fa-solid fa-reply"></i> أجب</span>
+            <span><i class="fa-regular fa-heart"></i></span>
+            <span><i class="fa-regular fa-bookmark"></i></span>
+          </div>
+        </div>
+
+        <!-- Post Item 2 -->
+        <div class="post-card">
+          <div class="post-stamp" style="border-color:#8b1d1d; color:#8b1d1d;"><i class="fa-solid fa-heart"></i></div>
+          <div class="post-header">
+            <div style="width:40px; height:40px; background:#e8d7be; border-radius:50%; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-user"></i></div>
+            <div>
+              <div class="post-author">رسائل 999</div>
+              <div class="post-time">قبل 1 يوم</div>
+            </div>
+          </div>
+          <div class="post-body">مرحبا</div>
+          <div class="post-actions">
+            <span><i class="fa-solid fa-reply"></i> أجب</span>
+            <span><i class="fa-regular fa-heart"></i></span>
+            <span><i class="fa-regular fa-bookmark"></i></span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Navigation Sidebar -->
+    <aside class="right-sidebar">
+      <div class="create-btn">
+        <div class="wax-seal">QQ</div>
+        + إنشاء جديد
+      </div>
+
+      <ul class="nav-menu">
+        <li class="nav-item"><i class="fa-regular fa-user"></i> حسابي</li>
+        <li class="nav-item active"><i class="fa-solid fa-circle-question"></i> الأسئلة</li>
+        <li class="nav-item"><i class="fa-solid fa-quote-right"></i> الاقتباسات</li>
+        <li class="nav-item"><i class="fa-solid fa-masks-theater"></i> الاعترافات</li>
+        <li class="nav-item"><i class="fa-regular fa-envelope"></i> الرسائل</li>
+      </ul>
+
+      <div class="coins-card">
+        <div>
+          <div style="font-size: 18px; font-weight: bold;">65</div>
+          <div style="font-size: 11px; color: var(--ink-light);">رصيد ASKCoins</div>
+        </div>
+        <div class="coin-icon">65</div>
+      </div>
+    </aside>
+
+  </div>
+
+</body>
+</html>
