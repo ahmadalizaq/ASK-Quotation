@@ -586,13 +586,89 @@
     100%{ background-position:300% 50%; }
   }
 
-  /* ================= ملمس الورق القديم — يُضاف فوق كل الأسطح الورقية ================= */
-  .auth-card, .content, .d-body, .sheet, #setupNotice .box, .confirm-modal, .ios-install-modal, .install-banner{
-    background-color: var(--paper);
+  /* ================= ملمس حبيبات الورق (SVG noise) — واقعية أعلى ================= */
+  html, body{
+    background-color: var(--night-2);
     background-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(0,0,0,0.25), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 85% 110%, rgba(0,0,0,0.3), transparent 60%);
+  }
+  .auth-card, .content, .d-body, .sheet, #setupNotice .box, .confirm-modal, .ios-install-modal, .install-banner,
+  .card, .quote-card, .confession-card, .post-tile, .note-stack{
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.23  0 0 0 0 0.16  0 0 0 0 0.09  0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
       radial-gradient(ellipse 340px 220px at 12% 6%, rgba(122,43,30,0.05), transparent 60%),
       radial-gradient(ellipse 300px 240px at 92% 96%, rgba(58,42,24,0.06), transparent 60%),
       radial-gradient(ellipse 200px 160px at 70% 20%, rgba(184,134,58,0.05), transparent 60%);
+  }
+
+  /* ================= الطوابع البريدية المُسنّنة (perforated stamps) ================= */
+  .stamp{
+    position:absolute; top:10px; left:12px; width:36px; height:42px; z-index:2;
+    display:flex; align-items:center; justify-content:center; font-size:16px; color:#fff;
+    background:var(--orange);
+    box-shadow:2px 3px 5px rgba(20,13,5,0.28);
+    transform:rotate(-3deg);
+  }
+  .stamp::after{
+    content:''; position:absolute; inset:3px; border:1.5px dotted rgba(255,255,255,0.85); pointer-events:none;
+  }
+  .stamp-q{ background:linear-gradient(150deg,#C1854F,#8A5A2C); }
+  .stamp-shout{ background:linear-gradient(150deg,#C6596B,#8C2E3F); }
+  .stamp-quote{ position:static; float:left; margin:0 0 8px 10px; transform:rotate(3deg); background:linear-gradient(150deg,#7C9A6E,var(--teal)); }
+  .stamp-confession{ background:linear-gradient(150deg,#9A7796,var(--violet)); }
+  [dir="rtl"] .stamp{ left:auto; right:12px; transform:rotate(3deg); }
+  [dir="rtl"] .stamp-quote{ float:right; margin:0 10px 8px 0; transform:rotate(-3deg); }
+  .card, .confession-card{ padding-top:20px; }
+  .card:has(.stamp){ padding-inline-end:56px; }
+
+  /* ================= حافة بريد جوي مخططة (الأحمر/الأزرق) على حافة البطاقات ================= */
+  .card, .confession-card{ position:relative; }
+  .card::after, .confession-card::after{
+    content:''; position:absolute; top:8px; bottom:8px; inset-inline-end:0; width:5px;
+    background:repeating-linear-gradient(-45deg, #A8422F 0 6px, var(--paper) 6px 9px, #3E5C8A 9px 15px, var(--paper) 15px 18px);
+    opacity:0.55; border-radius:0 4px 4px 0;
+  }
+
+  /* ================= ختم الشمع الرسمي (Postmark) بأعلى الهيدر ================= */
+  .postmark{
+    width:46px; height:46px; border-radius:50%; flex-shrink:0; position:relative;
+    background:radial-gradient(ellipse at 35% 30%, #EAD9AE, #D8C089 60%, #B89A5F 100%);
+    border:2px dashed rgba(58,42,24,0.35);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:inset 0 0 0 3px rgba(58,42,24,0.06), 0 2px 5px rgba(0,0,0,0.25);
+  }
+  .postmark span{ font-family:var(--font-word); font-weight:700; font-size:11px; color:rgba(58,42,24,0.65); letter-spacing:0.5px; }
+
+  /* ================= شعار الهيدر + الوصف المموّج ================= */
+  .d-header .logo{ display:flex; align-items:center; gap:12px; }
+  .d-tagline{ font-family:var(--font-display); font-size:11.5px; line-height:1.5; color:var(--on-red-muted); position:relative; padding-inline-end:14px; }
+  .d-tagline::after{
+    content:''; position:absolute; bottom:-6px; right:0; width:60px; height:8px;
+    background-image: radial-gradient(circle 3px at 6px 4px, transparent 2.4px, rgba(184,134,58,0.6) 2.6px 3px, transparent 3.2px);
+    background-size:14px 8px; background-repeat:repeat-x; opacity:0.8;
+  }
+  @media (max-width:1180px){ .d-tagline{ display:none; } }
+
+  /* ================= رزمة "الاقتباس المميز" — أوراق مكدّسة + مشبك ورق ================= */
+  .note-stack{
+    position:relative; background:var(--paper); border:1px solid var(--line-on-white); border-radius:3px;
+    padding:16px 13px 13px 13px; margin:20px 10px 22px 10px;
+    box-shadow:
+      3px 4px 0 var(--paper-soft), 3px 4px 0 1px rgba(58,42,24,0.15),
+      6px 8px 0 #EFE1BE, 6px 8px 0 1px rgba(58,42,24,0.1),
+      0 10px 18px rgba(var(--shadow-ink),0.25);
+    transform:rotate(-1deg);
+  }
+  .paperclip{
+    position:absolute; top:-16px; left:16px; width:20px; height:34px; z-index:3;
+    border:3px solid #9AA3AD; border-radius:10px 10px 9px 9px / 12px 12px 8px 8px;
+    border-bottom:none; transform:rotate(-8deg);
+    box-shadow:1px 1px 2px rgba(0,0,0,0.3);
+  }
+  .paperclip::after{
+    content:''; position:absolute; top:6px; left:-3px; width:14px; height:20px;
+    border:3px solid #9AA3AD; border-top:none; border-radius:0 0 8px 8px;
   }
 
   /* ختم بريد زخرفي أعلى بطاقة الدخول */
