@@ -586,29 +586,29 @@
     100%{ background-position:300% 50%; }
   }
 
-  /* ================= ملمس الورق القديم (صورة حقيقية مقصوصة) — يُضاف فوق كل الأسطح الورقية ================= */
+  /* ================= ملمس الورق — نافذة من نفس الشيت الأصلي (بدون قص ملف منفصل) ================= */
   .auth-card, .content, .d-body, .sheet, #setupNotice .box, .confirm-modal, .ios-install-modal, .install-banner,
   .card, .quote-card, .confession-card, .post-tile{
     background-color: var(--paper);
     background-image:
       radial-gradient(ellipse 340px 220px at 12% 6%, rgba(122,43,30,0.05), transparent 60%),
-      radial-gradient(ellipse 300px 240px at 92% 96%, rgba(58,42,24,0.06), transparent 60%),
-      url("assets/paper-texture.png");
-    background-repeat: no-repeat, no-repeat, repeat;
-    background-blend-mode: normal, normal, multiply;
+      radial-gradient(ellipse 300px 240px at 92% 96%, rgba(58,42,24,0.06), transparent 60%);
   }
 
-  /* ================= الطوابع البريدية الحقيقية (مقصوصة من رسمتك) ================= */
+  /* ================= الطوابع — نوافذ مقصوصة عرضياً (CSS فقط) من نفس ملف الشيت الأصلي ================= */
+  /* --sprite هو نفس ملفك بالضبط بدون أي تعديل — بس نحدد بـbackground-position أي جزء منه نعرض */
   .stamp{
-    position:absolute; top:8px; left:10px; width:44px; height:44px; z-index:2;
-    background-size:contain; background-repeat:no-repeat; background-position:center;
+    position:absolute; top:8px; left:10px; z-index:2;
+    background-image:url("assets/postal-sprite.png");
+    background-repeat:no-repeat;
+    background-size:1536px 1024px;
     filter: drop-shadow(2px 3px 4px rgba(20,13,5,0.3));
     transform:rotate(-4deg);
   }
-  .stamp-q{ background-image:url("assets/stamp-q.png"); }
-  .stamp-shout{ background-image:url("assets/stamp-msg.png"); }
-  .stamp-quote{ background-image:url("assets/stamp-quote.png"); position:static; float:left; width:50px; height:50px; margin:0 0 8px 10px; transform:rotate(4deg); filter: drop-shadow(1px 2px 3px rgba(20,13,5,0.25)); }
-  .stamp-confession{ background-image:url("assets/stamp-confession.png"); }
+  .stamp-q{ width:73px; height:74px; background-position:-359px -924px; }
+  .stamp-shout{ width:72px; height:73px; background-position:-450px -925px; }
+  .stamp-quote{ width:72px; height:73px; background-position:-540px -925px; position:static; float:left; margin:0 0 8px 10px; transform:rotate(4deg); filter: drop-shadow(1px 2px 3px rgba(20,13,5,0.25)); }
+  .stamp-confession{ width:71px; height:73px; background-position:-631px -925px; }
   [dir="rtl"] .stamp{ left:auto; right:10px; transform:rotate(4deg); }
   [dir="rtl"] .stamp-quote{ float:right; margin:0 10px 8px 0; transform:rotate(-4deg); }
   .card, .confession-card{ padding-top:20px; position:relative; }
@@ -621,24 +621,35 @@
     opacity:0.5; border-radius:0 4px 4px 0;
   }
 
-  /* ================= الختم الشمعي الحقيقي ================= */
+  /* ================= الختم الشمعي — نافذة من نفس الشيت ================= */
   .auth-card{ position:relative; }
   .auth-card::after{
-    content:''; position:absolute; top:-16px; left:24px; width:56px; height:54px;
-    background:url("assets/wax-seal.png") no-repeat center/contain;
+    content:''; position:absolute; top:-16px; left:24px; width:110px; height:107px;
+    background-image:url("assets/postal-sprite.png"); background-repeat:no-repeat;
+    background-size:1536px 1024px; background-position:-1190px -146px;
     filter: drop-shadow(0 4px 8px rgba(0,0,0,0.35));
+    transform:scale(0.5); transform-origin:top right;
   }
+  [dir="rtl"] .auth-card::after{ left:auto; right:24px; transform-origin:top left; }
   .postmark{
-    width:56px; height:54px; flex-shrink:0;
-    background:url("assets/wax-seal.png") no-repeat center/contain;
+    width:110px; height:107px; flex-shrink:0;
+    background-image:url("assets/postal-sprite.png"); background-repeat:no-repeat;
+    background-size:1536px 1024px; background-position:-1190px -146px;
     filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));
+    transform:scale(0.46); transform-origin:center;
+    margin:-28px -30px;
   }
 
-  /* ================= رزمة "الاقتباس المميز" — صورة حقيقية (أوراق + مشبك) ================= */
+  /* ================= رزمة "الاقتباس المميز" — نافذة من نفس الشيت (أوراق + مشبك) ================= */
   .note-stack{
-    position:relative; background:url("assets/note-stack.png") no-repeat center/100% 100%;
-    padding:26px 18px 16px 18px; margin:14px 6px 18px 6px; min-height:150px;
+    position:relative;
+    background-image:url("assets/postal-sprite.png"); background-repeat:no-repeat;
+    background-size:1536px 1024px; background-position:-22px -161px; background-attachment:local;
+    width:297px; max-width:100%; height:204px;
+    padding:34px 20px 16px 20px; margin:14px auto 18px auto; box-sizing:border-box;
+    overflow-y:auto;
   }
+  .note-stack > *{ position:relative; z-index:1; }
 
   /* ختم بريد زخرفي أعلى بطاقة الدخول */
   .auth-card{ position:relative; }
