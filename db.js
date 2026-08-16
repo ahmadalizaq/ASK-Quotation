@@ -132,6 +132,7 @@ async function bootApp(session){
     // صف الحساب مفقود (حالة نادرة) — نسجل خروجه بدل ما نعرض تطبيق مكسور
     showAuthError('صار خلل بجلب حسابك، حاول تسجل الدخول مرة ثانية.');
     await sb.auth.signOut();
+    hideBootLoader();
     return;
   }
   currentUser = profile;
@@ -140,7 +141,12 @@ async function bootApp(session){
   // هذا يخلي الـ CSS (media query) هو اللي يقرر أي واجهة تظهر حسب حجم الشاشة
   document.body.classList.add('app-active');
 
-  await Promise.all([loadPosts(), loadConfessions(), loadMyLikes(), loadNotifications(), loadPeople(), loadFollowing(), loadConversations(), loadFeatured()]);
+  try{
+    await Promise.all([loadPosts(), loadConfessions(), loadMyLikes(), loadNotifications(), loadPeople(), loadFollowing(), loadConversations(), loadFeatured()]);
+  } catch(err){
+    console.error('bootApp data load error:', err);
+    toast('❌ صار خطأ بتحميل البيانات — جرّب تحدّث الصفحة');
+  }
   render();
   subscribeRealtime();
   hideBootLoader();
@@ -834,15 +840,43 @@ function hideBootLoader(){
   if(el) el.classList.add('hide');
 }
 
+// تعرض شاشة خطأ واضحة بدل ما تخلي البوت لودر يلف إلى الأبد
+function showBootError(message){
+  hideBootLoader();
+  const box = document.getElementById('setupNotice');
+  if(!box) return;
+  box.querySelector('.box').innerHTML = `
+    <h2>ما قدرنا نوصل لقاعدة البيانات</h2>
+    <p style="font-size:13px; line-height:1.8;">${message}</p>
+    <p style="font-size:12px; line-height:1.8; color:var(--ink-muted); margin-top:10px;">
+      الأسباب الشائعة: مشروع Supabase متوقف (Paused) لعدم الاستخدام — روح لوحة تحكم Supabase وشغّله من جديد،
+      أو رابط/مفتاح API بملف <code>config.js</code> غير صحيح، أو الإنترنت/الشبكة تمنع الوصول لـ Supabase.
+    </p>
+    <button class="btn-primary" style="margin-top:14px;" onclick="location.reload()">إعادة المحاولة</button>
+  `;
+  box.style.display = 'flex';
+}
+
 async function initApp(){
   if(!supabaseReady){
     document.getElementById('setupNotice').style.display = 'flex';
     hideBootLoader();
     return;
   }
+  if(!sb){
+    showBootError('ملف supabase-client.js ما قدر ينشئ اتصال — تأكد إن مكتبة Supabase (من jsDelivr) وصلت تحمّل قبل هذا الملف، وإن ترتيب السكربتات بـ index.html صحيح.');
+    return;
+  }
+
+  // حماية: لو أي طلب لـ Supabase علّق أكثر من 10 ثواني (مشروع متوقف، أو الشبكة معلّقة)،
+  // نوقف الانتظار ونعرض رسالة خطأ واضحة بدل ما تظل شاشة التحميل تلف للأبد
+  const withTimeout = (promise, ms) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('انتهت مهلة الاتصال')), ms))
+  ]);
 
   sb.auth.onAuthStateChange((event, session) => {
-    if(session && !currentUser){ bootApp(session); }
+    if(session && !currentUser){ bootApp(session).catch(err => showBootError('صار خطأ وقت تحميل حسابك: ' + err.message)); }
     if(!session){
       currentUser = null;
       document.body.classList.remove('app-active');
@@ -851,7 +885,12 @@ async function initApp(){
     }
   });
 
-  const { data: { session } } = await sb.auth.getSession();
-  if(session){ bootApp(session); }
-  else { document.getElementById('authScreen').style.display = 'flex'; hideBootLoader(); }
+  try{
+    const { data: { session } } = await withTimeout(sb.auth.getSession(), 10000);
+    if(session){ await bootApp(session); }
+    else { document.getElementById('authScreen').style.display = 'flex'; hideBootLoader(); }
+  } catch(err){
+    console.error('initApp error:', err);
+    showBootError('صار خطأ وقت التحقق من جلستك: ' + err.message);
+  }
 }
