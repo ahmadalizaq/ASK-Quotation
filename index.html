@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>QQC — أسئلة، اقتباسات، اعترافات</title>
+<meta name="description" content="QQC — منصة عربية لطرح الأسئلة، مشاركة الاقتباسات، والاعتراف بصراحة (باسمك أو مجهول) مع مجتمع حقيقي.">
+<meta name="theme-color" content="#3B2818">
+<meta property="og:title" content="QQC — Question · Quote · Confession">
+<meta property="og:description" content="اسأل، شارك اقتباساتك، واعترف بصراحة — باسمك أو مجهول بالكامل.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231B1735'/%3E%3Ctext x='50' y='69' font-size='50' font-family='Georgia,serif' font-weight='bold' fill='%23D7A24C' text-anchor='middle'%3EQ%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="QQC">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Markazi+Text:wght@500;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div id="bootLoader" class="starfield">
+  <div class="qqc-logo" style="font-size:30px; position:relative; z-index:1;">QQC</div>
+  <div class="boot-spinner"></div>
+</div>
+
+<div id="setupNotice" style="display:none;">
+  <div class="box">
+    <h2>الموقع يحتاج إعداد أول مرة</h2>
+    <p style="font-size:13px; line-height:1.8;">لازم تربط قاعدة بيانات Supabase قبل ما يشتغل الموقع فعلياً (حسابات، أسئلة، اقتباسات، اعترافات — كلها حقيقية ومحتاجة قاعدة بيانات). افتح ملف <code>SETUP.md</code> المرفق واتبع الخطوات، بعدين رجّع افتح الصفحة.</p>
+  </div>
+</div>
+
+<div id="authScreen" class="starfield" style="display:none;">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="qqc-logo">QQC</div>
+    </div>
+    <div class="qqc-subtitle">سؤال - اقتباس - اعتراف</div>
+    <div class="auth-title" id="authTitle">تسجيل الدخول</div>
+    <div class="auth-sub" id="authSub">أدخل بياناتك للمتابعة</div>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-field" id="nameField" style="display:none;">
+      <label>اسمك</label>
+      <input type="text" id="authName" placeholder="مثال: سارة العتيبي" maxlength="60">
+    </div>
+    <div class="auth-field">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="authEmail" placeholder="you@example.com" maxlength="200">
+    </div>
+    <div class="auth-field">
+      <label>كلمة المرور</label>
+      <input type="password" id="authPassword" placeholder="6 أحرف على الأقل" maxlength="72">
+    </div>
+    <div class="auth-field" id="confirmPasswordField" style="display:none;">
+      <label>تأكيد كلمة المرور</label>
+      <input type="password" id="authPasswordConfirm" placeholder="أعد كتابة كلمة المرور" maxlength="72">
+    </div>
+    <button class="btn-primary" id="authSubmitBtn" onclick="submitAuth()">دخول</button>
+    <div class="auth-switch" id="authSwitchLine">
+      ماعندك حساب؟ <a onclick="toggleAuthMode()">أنشئ حساب جديد</a>
+    </div>
+    <div class="auth-switch" style="margin-top:6px;">
+      <a onclick="requestPasswordReset()">نسيت كلمة المرور؟</a>
+    </div>
+    <div class="guest-divider"><span>أو</span></div>
+    <button class="btn-ghost" style="margin-top:0;" onclick="continueAsGuest()">👀 تصفح كزائر بدون تسجيل</button>
+  </div>
+</div>
+
+<div class="guest-banner" id="guestBanner" style="display:none;">
+  <span>👀 تتصفح كزائر — تقدر تشوف كل شي، بس تحتاج حساب عشان تتفاعل</span>
+  <button onclick="promptGuestLogin()">تسجيل الدخول</button>
+</div>
+
+<!-- ===================== MOBILE APP ===================== -->
+<div class="app-mobile" id="appMobile">
+
+  <div class="topbar">
+    <div class="logo">
+      <div class="qqc-logo qqc-logo-sm">QQC</div>
+    </div>
+    <div class="top-actions">
+      <div class="icon-btn" onclick="openGlobalSearch()" aria-label="بحث">🔍</div>
+      <div class="icon-btn" onclick="toggleNotifPanel()" aria-label="الإشعارات">🔔<span class="badge-dot" id="notifBadgeM" style="display:none;">0</span></div>
+    </div>
+  </div>
+
+  <div class="content" id="content"></div>
+
+  <div class="nav-wrap">
+    <div class="bottom-nav">
+      <div class="nav-item" data-tab="profile" onclick="switchTab('profile')"><div class="ic">👤</div><div class="lb">حسابي</div></div>
+      <div class="nav-item active" data-tab="questions" onclick="switchTab('questions')"><div class="ic">❓</div><div class="lb">الأسئلة</div></div>
+      <div class="nav-item" data-tab="quotes" onclick="switchTab('quotes')"><div class="ic">❝</div><div class="lb">الاقتباسات</div></div>
+      <div class="nav-item" data-tab="confessions" onclick="switchTab('confessions')"><div class="ic">🎭</div><div class="lb">الاعترافات</div></div>
+      <div class="nav-item" data-tab="messages" onclick="switchTab('messages')"><div class="ic">💬</div><div class="lb">الرسائل</div></div>
+    </div>
+    <div class="nav-fab" onclick="openComposer()" aria-label="إنشاء جديد" role="button" tabindex="0">+</div>
+  </div>
+</div>
+
+<!-- ===================== DESKTOP APP ===================== -->
+<div class="app-desktop" id="appDesktop">
+  <div class="d-header">
+    <div class="logo">
+      <div class="qqc-logo qqc-logo-sm">QQC</div>
+      <div class="d-tagline">أسئلة من القلب...<br>إجابات من الناس</div>
+    </div>
+    <div class="d-search">
+      <input type="text" id="dHeaderSearch" placeholder="ابحث عن سؤال، اقتباس، أو شخص... واضغط Enter" onkeydown="if(event.key==='Enter') openGlobalSearch(this.value)">
+    </div>
+    <div class="d-header-actions">
+      <div class="postmark" aria-hidden="true"><span>QQC</span></div>
+      <div class="d-coin-chip">🪙 <span id="dCoinCount">0</span></div>
+      <div class="icon-btn" onclick="toggleNotifPanel()">🔔<span class="badge-dot" id="notifBadgeD" style="display:none;">0</span></div>
+      <div class="icon-btn" onclick="switchTab('profile')">👤</div>
+    </div>
+  </div>
+
+  <div class="d-body">
+    <aside class="d-sidebar-left">
+      <button class="btn-primary" onclick="openComposer()">+ إنشاء جديد</button>
+      <div class="d-nav-item nav-item" data-tab="profile" onclick="switchTab('profile')"><span class="ic">👤</span> حسابي</div>
+      <div class="d-nav-item nav-item active" data-tab="questions" onclick="switchTab('questions')"><span class="ic">❓</span> الأسئلة</div>
+      <div class="d-nav-item nav-item" data-tab="quotes" onclick="switchTab('quotes')"><span class="ic">❝</span> الاقتباسات</div>
+      <div class="d-nav-item nav-item" data-tab="confessions" onclick="switchTab('confessions')"><span class="ic">🎭</span> الاعترافات</div>
+      <div class="d-nav-item nav-item" data-tab="messages" onclick="switchTab('messages')"><span class="ic">💬</span> الرسائل</div>
+      <div class="d-side-widget">
+        <b id="dCoinWidget">0 🪙</b>
+        <span>رصيد ASKcoins</span>
+      </div>
+    </aside>
+    <main class="d-main" id="desktopContent"></main>
+    <aside class="d-sidebar-right" id="desktopSidebarRight"></aside>
+  </div>
+</div>
+
+<div class="notif-panel" id="notifPanel"></div>
+
+<div class="overlay" id="overlay" onclick="closeSheet()"></div>
+
+<!-- نافذة تأكيد مخصصة (تحل محل confirm/prompt المتصفح البدائية) -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+<div class="confirm-modal" id="confirmModal">
+  <div class="confirm-icon" id="confirmIcon">⚠️</div>
+  <div class="confirm-title" id="confirmTitle"></div>
+  <div class="confirm-text" id="confirmText"></div>
+  <div id="confirmInputWrap" style="display:none; margin-top:12px;">
+    <textarea id="confirmInput" rows="2" maxlength="200" placeholder="اكتب هنا (اختياري)..."></textarea>
+  </div>
+  <div class="confirm-actions">
+    <button class="btn-ghost" style="margin-top:0;" onclick="closeModal()">إلغاء</button>
+    <button class="btn-primary" id="confirmOkBtn" style="margin-top:0;">تأكيد</button>
+  </div>
+</div>
+
+<!-- composer sheet -->
+<div class="sheet" id="composerSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title-row"><div class="sheet-title">إنشاء جديد</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
+  <div class="mode-row" id="composerTabs">
+    <div class="mode-opt active" data-mode="ask" onclick="setComposerMode('ask')"><span class="ic">❓</span><span class="lb">سؤال</span></div>
+    <div class="mode-opt" data-mode="shoutout" onclick="setComposerMode('shoutout')"><span class="ic">📢</span><span class="lb">شوت أوت</span></div>
+    <div class="mode-opt" data-mode="quote" onclick="setComposerMode('quote')"><span class="ic">❝</span><span class="lb">اقتباس</span></div>
+    <div class="mode-opt" data-mode="confession" onclick="setComposerMode('confession')"><span class="ic">🎭</span><span class="lb">اعتراف</span></div>
+  </div>
+
+  <datalist id="topicDatalist"></datalist>
+
+  <div id="composerAskBody">
+    <textarea id="askText" rows="3" maxlength="500" oninput="growAndCount(this)" placeholder="اكتب سؤالك هنا... بينشر للجميع، وأي شخص يقدر يجاوب عليه"></textarea>
+    <div class="char-count" id="askText-count">0/500</div>
+    <input type="text" id="askTopic" list="topicDatalist" maxlength="30" placeholder="الفئة (مثال: حب، نجاح...) — اختياري" style="margin-top:8px;">
+    <div class="toggle-row">
+      <span>سؤال مجهول (ما يظهر اسمك)</span>
+      <div class="toggle on" id="anonToggle" onclick="this.classList.toggle('on')"><div class="toggle-dot"></div></div>
+    </div>
+    <button class="btn-primary" onclick="submitAsk()">إرسال السؤال (+8 🪙)</button>
+  </div>
+
+  <div id="composerShoutBody" style="display:none;">
+    <textarea id="shoutText" rows="3" maxlength="500" oninput="growAndCount(this)" placeholder="اكتب سؤال الشوت أوت..."></textarea>
+    <div class="char-count" id="shoutText-count">0/500</div>
+    <div class="toggle-row"><span>يكلف — وينبّه كل الأعضاء 📢</span><b style="font-size:12px;color:var(--red)">15 🪙</b></div>
+    <button class="btn-primary" onclick="submitShoutout()">نشر الشوت أوت</button>
+  </div>
+
+  <div id="composerQuoteBody" style="display:none;">
+    <textarea id="quoteText" rows="3" maxlength="500" oninput="growAndCount(this)" placeholder="اكتب اقتباساً أو حكمة لمشاركتها..."></textarea>
+    <div class="char-count" id="quoteText-count">0/500</div>
+    <input type="text" id="quoteTopic" list="topicDatalist" maxlength="30" placeholder="الفئة — اختر موجودة أو اكتب فئة جديدة" style="margin-top:8px;">
+    <button class="btn-primary" onclick="submitQuote()">نشر الاقتباس</button>
+  </div>
+
+  <div id="composerConfessionBody" style="display:none;">
+    <textarea id="confessionText" rows="4" maxlength="1000" oninput="growAndCount(this)" placeholder="اكتب اعترافك هنا..."></textarea>
+    <div class="char-count" id="confessionText-count">0/1000</div>
+    <div class="toggle-row">
+      <span>اعتراف مجهول (ما يظهر اسمك)</span>
+      <div class="toggle on" id="confessionAnonToggle" onclick="this.classList.toggle('on')"><div class="toggle-dot"></div></div>
+    </div>
+    <button class="btn-primary" onclick="submitConfession()">نشر الاعتراف</button>
+  </div>
+</div>
+
+<!-- profile view sheet -->
+<div class="sheet" id="profileSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-close" style="position:absolute; top:14px; left:14px;" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div>
+  <div id="profileSheetBody"></div>
+</div>
+
+<!-- DM thread sheet -->
+<div class="sheet" id="threadSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title-row"><div class="sheet-title" id="threadTitle">محادثة</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
+  <div id="threadMessages" style="max-height:46vh; overflow-y:auto; margin-bottom:12px; display:flex; flex-direction:column;"></div>
+  <div style="display:flex; gap:8px;">
+    <input type="text" id="threadText" maxlength="1000" placeholder="اكتب رسالتك..." style="flex:1;" onkeydown="if(event.key==='Enter') sendMessage()">
+    <button class="btn-primary" style="width:auto; padding:12px 18px; margin-top:0;" onclick="sendMessage()">إرسال</button>
+  </div>
+</div>
+
+<!-- share picker sheet -->
+<div class="sheet" id="sharePickerSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title-row"><div class="sheet-title">شارك مع...</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
+  <div id="sharePickerList"></div>
+</div>
+
+<!-- بحث موحّد -->
+<div class="sheet" id="searchSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title-row"><div class="sheet-title">بحث</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
+  <input type="text" id="globalSearchInput" class="explore-search" placeholder="ابحث عن سؤال، اقتباس، اعتراف، أو شخص..." oninput="onGlobalSearch(this.value)">
+  <div id="globalSearchResults" style="margin-top:12px; max-height:60vh; overflow-y:auto;"></div>
+</div>
+
+<!-- مين أعجب -->
+<div class="sheet" id="likersSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title-row"><div class="sheet-title">أعجب به</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
+  <div id="likersList" style="max-height:50vh; overflow-y:auto;"></div>
+</div>
+
+<!-- comments sheet -->
+<div class="sheet" id="commentsSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title-row"><div class="sheet-title">التعليقات</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
+  <div id="commentsList" style="max-height:42vh; overflow-y:auto; margin-bottom:12px;"></div>
+  <textarea id="commentText" rows="2" maxlength="500" oninput="growAndCount(this)" placeholder="اكتب تعليقك..."></textarea>
+  <div class="char-count" id="commentText-count">0/500</div>
+  <button class="btn-primary" onclick="submitComment()">نشر التعليق</button>
+</div>
+
+<!-- answer sheet -->
+<div class="sheet" id="answerSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title-row"><div class="sheet-title">الإجابة على السؤال</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
+  <div class="q-bubble" id="answerQuestionPreview"></div>
+  <textarea id="answerText" rows="4" maxlength="1000" oninput="growAndCount(this)" placeholder="اكتب إجابتك..."></textarea>
+  <div class="char-count" id="answerText-count">0/1000</div>
+  <button class="btn-primary" onclick="submitAnswer()">نشر الإجابة</button>
+</div>
+
+<!-- كل الإجابات على سؤال -->
+<div class="sheet" id="allAnswersSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title-row"><div class="sheet-title">كل الإجابات</div><div class="sheet-close" onclick="closeSheet()" aria-label="إغلاق" role="button" tabindex="0">✕</div></div>
+  <div class="q-bubble" id="allAnswersQuestionPreview"></div>
+  <div id="allAnswersList" style="max-height:42vh; overflow-y:auto; margin:10px 0 14px 0;"></div>
+  <button class="btn-primary" onclick="closeSheet(); openAnswer(activeAnswersQuestion.id)">➕ أضف إجابتك</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- بانر تثبيت التطبيق على الشاشة الرئيسية -->
+<div class="install-banner" id="installBanner" style="display:none;">
+  <div class="install-banner-icon">📲</div>
+  <div class="install-banner-text">
+    <b>ثبّت QQC على شاشتك الرئيسية</b>
+    <span>يفتح مباشرة زي أي تطبيق، بدون متصفح</span>
+  </div>
+  <button class="install-banner-btn" onclick="handleInstallClick()">تثبيت</button>
+  <div class="install-banner-close" onclick="dismissInstallBanner()" aria-label="إغلاق" role="button" tabindex="0">✕</div>
+</div>
+
+<!-- تعليمات آيفون (Safari ما يدعم تثبيت تلقائي، لازم خطوات يدوية) -->
+<div class="modal-overlay" id="iosInstallOverlay" onclick="closeIosInstallModal()"></div>
+<div class="ios-install-modal" id="iosInstallModal">
+  <div class="sheet-close" style="position:absolute; top:14px; left:14px;" onclick="closeIosInstallModal()" aria-label="إغلاق" role="button" tabindex="0">✕</div>
+  <div style="text-align:center;">
+    <div class="qqc-logo" style="font-size:26px; display:inline-flex;">QQC</div>
+    <h3 style="font-family:var(--font-display); font-size:17px; margin:14px 0 4px 0; color:var(--ink);">ثبّت QQC على شاشتك الرئيسية</h3>
+    <p class="muted" style="font-size:12px; margin-bottom:16px;">3 خطوات بسيطة على Safari:</p>
+  </div>
+  <div class="ios-step">
+    <div class="ios-step-num">1</div>
+    <div>اضغط زر <b>المشاركة</b> <span class="ios-share-ic">⬆️</span> بأسفل شاشة Safari</div>
+  </div>
+  <div class="ios-step">
+    <div class="ios-step-num">2</div>
+    <div>مرّر لتحت واختر <b>"إضافة إلى الشاشة الرئيسية"</b><br><span class="muted" style="font-size:10.5px;">Add to Home Screen</span></div>
+  </div>
+  <div class="ios-step">
+    <div class="ios-step-num">3</div>
+    <div>اضغط <b>"إضافة"</b> بأعلى يمين الشاشة — خلاص</div>
+  </div>
+  <div class="muted" style="font-size:10.5px; text-align:center; margin-top:14px;">ملاحظة: الخطوات تشتغل من متصفح Safari — إذا تتصفح من داخل تطبيق ثاني (إنستقرام مثلاً)، افتح الرابط بـ Safari أولاً.</div>
+</div>
+
+<script src="config.js"></script>
+<script src="supabase-client.js"></script>
+<script src="db.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
