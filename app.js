@@ -183,7 +183,7 @@ function renderDesktopSidebar(){
     ${featuredPost ? `
     <div style="background:var(--paper);border:1.5px solid var(--line-on-white);border-radius:15px;padding:13px;margin-bottom:12px;">
       <span style="font-size:9.5px;font-weight:800;color:var(--red);margin-bottom:7px;display:block;">⭐ الاقتباس المميز اليوم</span>
-      <div style="font-family:'El Messiri',sans-serif;font-weight:600;font-size:12px;line-height:1.5;color:var(--ink);">${esc(featuredPost.text)}</div>
+      <div style="font-family:var(--font-display);font-weight:600;font-size:12px;line-height:1.5;color:var(--ink);">${esc(featuredPost.text)}</div>
       <div class="muted" style="font-size:10px; margin-top:8px;" ${up(featuredPost.anon?null:featuredPost.author_id)}>— ${featuredPost.anon ? 'مجهول' : esc(featuredPost.author_name)}</div>
     </div>` : ''}
     <div style="background:var(--paper);border:1.5px solid var(--line-on-white);border-radius:15px;padding:13px;">
@@ -232,7 +232,7 @@ function onGlobalSearch(val){
     html += people.slice(0,6).map(p=>`
       <div class="inbox-item" style="cursor:default;">
         <span ${up(p.id)}>${avatarHtml(p.avatar_url, p.initials, '')}</span>
-        <div style="flex:1;" ${up(p.id)}><b style="font-family:'El Messiri',sans-serif; font-size:12.5px; color:var(--ink);">${esc(p.name)}</b></div>
+        <div style="flex:1;" ${up(p.id)}><b style="font-family:var(--font-display); font-size:12.5px; color:var(--ink);">${esc(p.name)}</b></div>
         <button class="d-follow-btn ${followingIds.has(p.id)?'following':''}" onclick="toggleFollow('${p.id}')">${followingIds.has(p.id)?'متابَع':'متابعة'}</button>
       </div>
     `).join('');
@@ -562,7 +562,7 @@ function renderMessagesPage(){
       <div class="inbox-item" onclick="openThread('${c.userId}','${b64(c.name||'')}','${escAttr(c.initials||'?')}', ${c.avatar? `'${escAttr(c.avatar)}'` : 'null'})">
         ${avatarHtml(c.avatar, c.initials, '')}
         <div style="flex:1;">
-          <b style="font-family:'El Messiri',sans-serif; font-size:12.5px; color:var(--ink);">${esc(c.name)||'مستخدم'}</b>
+          <b style="font-family:var(--font-display); font-size:12.5px; color:var(--ink);">${esc(c.name)||'مستخدم'}</b>
           <div class="muted" style="font-size:11px; margin-top:2px;">${esc((c.lastText||'').slice(0,40))}</div>
         </div>
         ${c.unread>0 ? `<div class="dot" style="width:10px;height:10px;"></div>` : ''}
@@ -669,7 +669,7 @@ function renderSharePicker(){
   box.innerHTML = list.map(p=>`
     <div class="inbox-item" onclick="shareToPerson('${p.id}')">
       ${avatarHtml(p.avatar_url, p.initials, '')}
-      <b style="font-family:'El Messiri',sans-serif; font-size:12.5px; color:var(--ink);">${esc(p.name)}</b>
+      <b style="font-family:var(--font-display); font-size:12.5px; color:var(--ink);">${esc(p.name)}</b>
     </div>
   `).join('');
 }
@@ -687,7 +687,7 @@ function renderLikersList(rows){
     return `
     <div class="inbox-item" ${up(r.user_id)}>
       ${avatarHtml(p.avatar_url, p.initials, '')}
-      <b style="font-family:'El Messiri',sans-serif; font-size:12.5px; color:var(--ink);">${esc(p.name)||'مستخدم'}</b>
+      <b style="font-family:var(--font-display); font-size:12.5px; color:var(--ink);">${esc(p.name)||'مستخدم'}</b>
     </div>`;
   }).join('');
 }
@@ -698,10 +698,10 @@ function exportStoryImage(text){
   canvas.width = 1080; canvas.height = 1350;
   const ctx = canvas.getContext('2d');
   const grad = ctx.createLinearGradient(0,0,1080,1350);
-  grad.addColorStop(0,'#C97B4A'); grad.addColorStop(1,'#7A3F22');
+  grad.addColorStop(0,'#2C2557'); grad.addColorStop(0.55,'#1B1735'); grad.addColorStop(1,'#0D0B1C');
   ctx.fillStyle = grad; ctx.fillRect(0,0,1080,1350);
 
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = '#F7F1E3';
   ctx.textAlign = 'center';
   ctx.direction = 'rtl';
 
@@ -719,6 +719,7 @@ function exportStoryImage(text){
   lines.forEach((l,i)=> ctx.fillText(l.trim(), 540, startY + i*80));
 
   ctx.font = '700 34px sans-serif';
+  ctx.fillStyle = '#D7A24C';
   ctx.fillText('QQC', 540, 1260);
 
   const link = document.createElement('a');

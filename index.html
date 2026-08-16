@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>QQC — أسئلة، اقتباسات، اعترافات</title>
 <meta name="description" content="QQC — منصة عربية لطرح الأسئلة، مشاركة الاقتباسات، والاعتراف بصراحة (باسمك أو مجهول) مع مجتمع حقيقي.">
-<meta name="theme-color" content="#A8592E">
+<meta name="theme-color" content="#1B1735">
 <meta property="og:title" content="QQC — Question · Quote · Confession">
 <meta property="og:description" content="اسأل، شارك اقتباساتك، واعترف بصراحة — باسمك أو مجهول بالكامل.">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23A8592E'/%3E%3Ctext x='50' y='68' font-size='48' font-family='Georgia,serif' font-weight='bold' fill='%23FBF3E7' text-anchor='middle'%3EQ%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231B1735'/%3E%3Ctext x='50' y='69' font-size='50' font-family='Georgia,serif' font-weight='bold' fill='%23D7A24C' text-anchor='middle'%3EQ%3C/text%3E%3C/svg%3E">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -17,14 +17,14 @@
 <meta name="apple-mobile-web-app-title" content="QQC">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Markazi+Text:wght@500;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<div id="bootLoader">
-  <div class="qqc-logo" style="font-size:28px;">QQC</div>
+<div id="bootLoader" class="starfield">
+  <div class="qqc-logo" style="font-size:30px; position:relative; z-index:1;">QQC</div>
   <div class="boot-spinner"></div>
 </div>
 
@@ -35,7 +35,7 @@
   </div>
 </div>
 
-<div id="authScreen" style="display:none;">
+<div id="authScreen" class="starfield" style="display:none;">
   <div class="auth-card">
     <div class="auth-logo">
       <div class="qqc-logo">QQC</div>
@@ -294,7 +294,7 @@
   <div class="sheet-close" style="position:absolute; top:14px; left:14px;" onclick="closeIosInstallModal()" aria-label="إغلاق" role="button" tabindex="0">✕</div>
   <div style="text-align:center;">
     <div class="qqc-logo" style="font-size:26px; display:inline-flex;">QQC</div>
-    <h3 style="font-family:'El Messiri',sans-serif; font-size:16px; margin:14px 0 4px 0; color:var(--ink);">ثبّت QQC على شاشتك الرئيسية</h3>
+    <h3 style="font-family:var(--font-display); font-size:17px; margin:14px 0 4px 0; color:var(--ink);">ثبّت QQC على شاشتك الرئيسية</h3>
     <p class="muted" style="font-size:12px; margin-bottom:16px;">3 خطوات بسيطة على Safari:</p>
   </div>
   <div class="ios-step">
